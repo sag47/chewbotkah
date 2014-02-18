@@ -30,14 +30,24 @@ class crawler():
     self.driver=driver
     self.domain_filter=domain_filter
   def _consume(self,url):
-    self.pages[url]=[]
-    self.driver.get(url)
-    tags=[]
-    for tag in self.driver.find_elements_by_tag_name('a'):
-      self.pages[url].append(tag.get_attribute('href'))
-    for link in self.pages[url]:
-      if (self.domain_filter in link) and not ('#' in link) and not (link in self.pages.keys()):
-        self._consume(link)
+    try:
+      if '?' in url:
+        url=url.split('?')[0]
+      if url in self.pages:
+        return ''
+      self.pages[url]=[]
+      self.driver.get(url)
+      tags=[]
+      if len(self.driver.find_elements_by_tag_name('a')) > 0:
+        for tag in self.driver.find_elements_by_tag_name('a'):
+          if not type(tag.get_attribute('href')) == type(None):
+            self.pages[url].append(tag.get_attribute('href'))
+      if len(self.pages[url]) > 0:
+        for link in self.pages[url]:
+          if (self.domain_filter in link) and not ('#' in link) and not (link in self.pages.keys()):
+            self._consume(link)
+    except Exception,e:
+      pass
   def crawl(self,url):
     self._consume(url)
     return self.pages
