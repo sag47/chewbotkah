@@ -86,6 +86,9 @@ if __name__ == '__main__':
   STATUS=0
   total=0
   failures=0
+
+  #option parsing
+
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
   print >> stderr, "Target: %s" % start_url
@@ -108,8 +111,7 @@ if __name__ == '__main__':
 
   endtime=datetime.now()
   print >> stderr, "\n"+"#"*70
-  print >> stderr, "Total test results."
-  print >> stderr, "Ran %s tests." % str(total)
+  print >> stderr, "Total: Ran %s tests." % str(total)
   if failures == 0:
     print >> stderr, "All OK!"
   else:
