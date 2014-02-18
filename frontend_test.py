@@ -11,7 +11,9 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from qa_nettools import NetworkCapture
 from datetime import datetime
 from sys import stderr
+from optparse import OptionParser
 
+VERSION = '0.1.1'
 start_url='http://example.com/'
 domain_filter='example.com'
 wrong_url_excludes=['iana.org']
@@ -88,6 +90,26 @@ if __name__ == '__main__':
   failures=0
 
   #option parsing
+  usage="""\
+Usage: %prog --target-url URL --domain-filter STRING --wrong-url-excludes LIST
+
+Description:
+  %prog can be used to crawl domains or sub-urls to find dead links and
+  resources which are bad.
+
+Examples:
+%prog -t 'https://nts.drexel.edu/modules/' -d 'nts.drexel.edu/modules' -e 'www.drexel.edu,goodwin.drexel.edu'"""
+  parser = OptionParser(usage=usage,version='%prog ' + VERSION)
+  parser.add_option('-d','--domain-filter',dest="domain_filter", help="This filter stops the crawler from traversing the whole web.  This will restrict the crawler to a url pattern", metavar="STRING")
+  parser.add_option('-t','--target-url',dest="start_url", help="This is the target page in which the crawler will start.", metavar="URL")
+  parser.add_option('-e','--wrong-url-excludes',dest="wrong_url_excludes", help="This is a comma separated list which prevents the crawler from warning about.", metavar="LIST")
+  parser.set_defaults(domain_filter=domain_filter,start_url=start_url,wrong_url_excludes=','.join(wrong_url_excludes))
+  (options, args) = parser.parse_args()
+  if len(args) > 1:
+    print >> stderr, "Warning, you've entered values outside of options."
+  start_url=options.start_url
+  domain_filter=options.domain_filter
+  wrong_url_excludes=options.wrong_url_excludes.strip().split(',')
 
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
