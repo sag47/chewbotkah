@@ -11,9 +11,11 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from qa_nettools import NetworkCapture
 from datetime import datetime
 from sys import stderr
+from optparse import OptionParser
 
-start_url="http://example.com/"
-domain_filter="example.com"
+VERSION = '0.1.1'
+start_url='http://example.com/'
+domain_filter='example.com'
 wrong_url_excludes=['iana.org']
 
 class TestWrongUrls(unittest.TestCase):
@@ -55,19 +57,22 @@ def crawl_suite():
     for link in pages[page]:
       warn=True
       for rule in wrong_url_excludes:
-        if rule in link:
+        if len(rule) > 0 and rule in link:
           warn=False
       if warn:
         suite.addTest(TestWrongUrls(domain_filter,page,link))
   return suite
 
 def http_codes_suite():
-  sel=selenium.selenium('127.0.0.1', 4444, '*pifirefox', start_url)
+  from sys import exit
+  from time import sleep
+  sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
   sel.start('captureNetworkTraffic=true')
   suite = unittest.TestSuite()
   for page in pages.keys():
     sel.open(page)
-    sel.wait_for_page_to_load(60000)
+    #wait for javascript to potentially execute
+    sleep(0.1)
     raw_xml = sel.captureNetworkTraffic('xml')
     traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
     #network traffic details
@@ -83,15 +88,36 @@ if __name__ == '__main__':
   STATUS=0
   total=0
   failures=0
-  starttime=datetime.now()
 
+  #option parsing
+  usage="""\
+Usage: %prog --target-url URL --domain-filter STRING --wrong-url-excludes LIST
+
+Description:
+  %prog can be used to crawl domains or sub-urls to find dead links and
+  resources which are bad.
+
+Examples:
+%prog -t 'https://nts.drexel.edu/modules/' -d 'nts.drexel.edu/modules' -e 'www.drexel.edu,goodwin.drexel.edu'"""
+  parser = OptionParser(usage=usage,version='%prog ' + VERSION)
+  parser.add_option('-d','--domain-filter',dest="domain_filter", help="This filter stops the crawler from traversing the whole web.  This will restrict the crawler to a url pattern", metavar="STRING")
+  parser.add_option('-t','--target-url',dest="start_url", help="This is the target page in which the crawler will start.", metavar="URL")
+  parser.add_option('-e','--wrong-url-excludes',dest="wrong_url_excludes", help="This is a comma separated list which prevents the crawler from warning about.", metavar="LIST")
+  parser.set_defaults(domain_filter=domain_filter,start_url=start_url,wrong_url_excludes=','.join(wrong_url_excludes))
+  (options, args) = parser.parse_args()
+  if len(args) > 1:
+    print >> stderr, "Warning, you've entered values outside of options."
+  start_url=options.start_url
+  domain_filter=options.domain_filter
+  wrong_url_excludes=options.wrong_url_excludes.strip().split(',')
+
+  starttime=datetime.now()
+  print >> stderr, "\n"+"#"*70
+  print >> stderr, "Target: %s" % start_url
+  print >> stderr, "Domain Filter: %s" % domain_filter
+  print >> stderr, "Wrong URL Excludes: %s" % ','.join(wrong_url_excludes)
   print >> stderr, "Crawling site for bad links in html..."
-  try:
-    result=unittest.TextTestRunner(verbosity=0).run(crawl_suite())
-    break
-  except Exception,e:
-    print >> stderr, "Selenium + Firefox not ready."
-    exit(1)
+  result=unittest.TextTestRunner(verbosity=0).run(crawl_suite())
   total+=result.testsRun
   failures+=len(result.failures)
   if not result.wasSuccessful():
@@ -107,8 +133,7 @@ if __name__ == '__main__':
 
   endtime=datetime.now()
   print >> stderr, "\n"+"#"*70
-  print >> stderr, "Total test results."
-  print >> stderr, "Ran %s tests." % str(total)
+  print >> stderr, "Total: Ran %s tests." % str(total)
   if failures == 0:
     print >> stderr, "All OK!"
   else:

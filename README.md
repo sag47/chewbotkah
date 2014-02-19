@@ -10,6 +10,9 @@ First run `setup.sh` as root.  Then run `setup.sh` as a normal user.
 
     sudo ./setup/setup_firefox.sh
     ./setup/setup_firefox.sh
+    #run some basic tests against example.com
+    ./frontend_test.py
+    ./setup/setup_firefox.sh kill
 
 If you run `setup.sh` twice it should autodetect running processes.
 
