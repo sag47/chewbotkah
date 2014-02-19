@@ -31,7 +31,9 @@ There will soon be a third stage.  It will involve visiting each target URL on e
 
 These stages are organized into Suites.  Currently there are only 3 suites planned.
 
+## Commonly encountered exceptions
 
+* `ERROR: There was an unexpected Alert! [An error occurred! TypeError: a is null]` - This likely means that DOM elements were changed or not ready.  While all requests wait to execute until after DOMReady they can't account for JavaScript manipulating the page.  To mitigate this use the `--request-delay` option.
 
 
 # Redistribution
