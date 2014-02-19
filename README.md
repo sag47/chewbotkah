@@ -18,18 +18,19 @@ If you run `setup.sh` twice it should autodetect running processes.
 
 # What does it do?
 
-It crawls a frontend and attempts to run basic quality assurance tests
+It crawls a frontend and attempts to run basic quality assurance tests in stages.
 
 Currently there are only two stages.
 
-1. Crawls a domain using a domain filter so it doesn't attempt to crawl the whole internet.  It will grab every unique URL it can script.  It will then run unit tests on the scraped `<a>` elements and check for links off-site.  There is a variable for ignoring certain domains.
-2. With the list of unique URLs from the crawler visit each page and profile the page load.  Report any resources which do not return a `200` HTTP status as well as which page it occurred.
-
-There will soon be a third stage.  It will involve visiting each target URL on every page and just checking the HTTP status of the page load (even if the link is off site).  It will only use the unique URL list from the crawler in stage 1 in which to visit pages.  It will not attempt to scrape pages it visits but just get the HTTP return status code.
+1. Crawls a domain using a domain filter so it doesn't attempt to crawl the whole internet.  It will grab every unique URL it can scrape.  This builds an index of domain specific pages matching the `--domain-filter` option.  Each index contains a set of links found on the page.
+2. Run individual test suites on the crawled data.
 
 ## Suites
 
-These stages are organized into Suites.  Currently there are only 3 suites planned.
+The testing stages are organized into Suites.  Currently there are only 2 suites.
+
+* Suite 1 - This suite analyzes crawler data and checks for links that are not approved through whitelist or do not match the `--domain-filter`.  This operates on the `href` attribute of `<a>` element in the scrape data.  This does not actually perform any network requests but uses the crawl data.
+* Suite 2 - This suite profiles the loading of each page on the domain from crawler data and determins if there are any non-200 HTTP status resources loading on each page.  This only tests the crawler indexes and does not check links within pages.
 
 ## Commonly encountered exceptions
 
