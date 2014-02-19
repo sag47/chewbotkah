@@ -12,11 +12,12 @@ from qa_nettools import NetworkCapture
 from datetime import datetime
 from sys import stderr
 from optparse import OptionParser
+from urllib2 import URLError
 
 VERSION = '0.1.1'
 start_url='http://example.com/'
 domain_filter='example.com'
-href_whitelist=['']
+href_whitelist=['iana.org']
 
 class TestWrongUrls(unittest.TestCase):
   def __init__(self,domain_filter,page,link):
@@ -45,13 +46,12 @@ class TestBadResources(unittest.TestCase):
                          'resource' :self.resource,
                          'status': self.status})
 
-def crawl_suite():
-  from qa_nettools import crawler
+def href_suite():
+  """
+    Test Suite 1
+    This suite analyzes crawler data and checks for links that are not approved through whitelist or do not match the domain_filter.
+  """
   global pages
-  driver=webdriver.Remote(command_executor='http://127.0.0.1:4444/wd/hub',desired_capabilities=DesiredCapabilities.FIREFOX)
-  crawler=crawler(driver,domain_filter=domain_filter)
-  pages=crawler.crawl(start_url)
-  driver.quit
   suite = unittest.TestSuite()
   for page in pages.keys():
     for link in pages[page]:
@@ -64,7 +64,10 @@ def crawl_suite():
   return suite
 
 def http_codes_suite():
-  from sys import exit
+  """
+    Test Suite 2
+    This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
+  """
   from time import sleep
   sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
   sel.start('captureNetworkTraffic=true')
@@ -82,6 +85,22 @@ def http_codes_suite():
       if method == 'GET':
         suite.addTest(TestBadResources(page,resource,status))
   return suite
+
+def crawl():
+  """
+    The crawl function calls a crawler to gather data about a website which can be used by other test suites.
+  """
+  from sys import exit
+  from qa_nettools import crawler
+  global pages
+  try:
+    driver=webdriver.Remote(command_executor='http://127.0.0.1:4444/wd/hub',desired_capabilities=DesiredCapabilities.FIREFOX)
+  except URLError,e:
+    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
+    exit(1)
+  crawler=crawler(driver,domain_filter=domain_filter)
+  pages=crawler.crawl(start_url)
+  driver.quit
 
 if __name__ == '__main__':
   from sys import exit
@@ -115,16 +134,24 @@ Examples:
   print >> stderr, "\n"+"#"*70
   print >> stderr, "Target: %s" % start_url
   print >> stderr, "Domain Filter: %s" % domain_filter
-  print >> stderr, "Wrong URL Excludes: %s" % ','.join(href_whitelist)
-  print >> stderr, "Crawling site for bad links in html..."
-  result=unittest.TextTestRunner(verbosity=0).run(crawl_suite())
+  print >> stderr, "HREF Whitelist: %s" % ','.join(href_whitelist)
+
+
+  print >> stderr, "\n"+"#"*70
+  print >> stderr, "Crawling site..."
+  crawl()
+  print >> stderr, "Done."
+
+  print >> stderr, "\n"+"#"*70
+  print >> stderr, "Running Test Suite 1: Check for non-authorized links based on HREF Whitelist and Domain Filter."
+  result=unittest.TextTestRunner(verbosity=0).run(href_suite())
   total+=result.testsRun
   failures+=len(result.failures)
   if not result.wasSuccessful():
     STATUS=1
 
   print >> stderr, "\n"+"#"*70
-  print >> stderr, "Checking HTTP status codes of all site resources..."
+  print >> stderr, "Running Test Suite 2: Checking HTTP status codes of all site resources."
   result=unittest.TextTestRunner(verbosity=0).run(http_codes_suite())
   total+=result.testsRun
   failures+=len(result.failures)
