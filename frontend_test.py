@@ -14,7 +14,7 @@ from sys import stderr
 from optparse import OptionParser
 from urllib2 import URLError
 
-VERSION = '0.1.1'
+VERSION = '0.1.2'
 start_url='http://example.com/'
 domain_filter='example.com'
 href_whitelist=['iana.org']
