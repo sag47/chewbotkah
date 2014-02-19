@@ -18,6 +18,7 @@ VERSION = '0.1.1'
 start_url='http://example.com/'
 domain_filter='example.com'
 href_whitelist=['iana.org']
+delay=0.0
 
 class TestWrongUrls(unittest.TestCase):
   def __init__(self,domain_filter,page,link):
@@ -69,13 +70,15 @@ def http_codes_suite():
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
   """
   from time import sleep
+  global delay
   sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
   sel.start('captureNetworkTraffic=true')
   suite = unittest.TestSuite()
   for page in pages.keys():
     sel.open(page)
     #wait for javascript to potentially execute
-    sleep(0.1)
+    if delay != 0:
+      sleep(0.3)
     raw_xml = sel.captureNetworkTraffic('xml')
     traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
     #network traffic details
@@ -86,7 +89,7 @@ def http_codes_suite():
         suite.addTest(TestBadResources(page,resource,status))
   return suite
 
-def crawl():
+def crawl(delay=0.0):
   """
     The crawl function calls a crawler to gather data about a website which can be used by other test suites.
   """
@@ -98,7 +101,9 @@ def crawl():
   except URLError,e:
     print >> stderr, "Could not open connection to Selenium.  Did you start it?"
     exit(1)
-  crawler=crawler(driver,domain_filter=domain_filter)
+  if not delay == 0:
+    print >> stderr, "Crawler request delay: %f seconds" % delay
+  crawler=crawler(driver,domain_filter=domain_filter,delay=delay)
   pages=crawler.crawl(start_url)
   driver.quit
 
@@ -122,13 +127,15 @@ Examples:
   parser.add_option('-d','--domain-filter',dest="domain_filter", help="This filter stops the crawler from traversing the whole web.  This will restrict the crawler to a url pattern", metavar="STRING")
   parser.add_option('-t','--target-url',dest="start_url", help="This is the target page in which the crawler will start.", metavar="URL")
   parser.add_option('-w','--href-whitelist',dest="href_whitelist", help="This is a comma separated list which enables a whitelist of any href links that don't match the --domain-filter to pass and all other references to fail.  Part of test Suite 1.", metavar="LIST")
-  parser.set_defaults(domain_filter=domain_filter,start_url=start_url,href_whitelist=','.join(href_whitelist))
+  parser.add_option('--request-delay',dest="delay", help="Delay all requests by number of seconds.  This number can be a floating point for sub-second precision.", metavar="SECONDS")
+  parser.set_defaults(domain_filter=domain_filter,start_url=start_url,href_whitelist=','.join(href_whitelist),delay=delay)
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
   start_url=options.start_url
   domain_filter=options.domain_filter
   href_whitelist=options.href_whitelist.strip().split(',')
+  delay=float(options.delay)
 
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
@@ -139,7 +146,7 @@ Examples:
 
   print >> stderr, "\n"+"#"*70
   print >> stderr, "Crawling site..."
-  crawl()
+  crawl(delay)
   print >> stderr, "Done."
 
   print >> stderr, "\n"+"#"*70
@@ -152,7 +159,14 @@ Examples:
 
   print >> stderr, "\n"+"#"*70
   print >> stderr, "Running Test Suite 2: Checking HTTP status codes of all site resources."
-  result=unittest.TextTestRunner(verbosity=0).run(http_codes_suite())
+  if not delay == 0:
+    print "Request delay: %f" % delay
+  try:
+    result=unittest.TextTestRunner(verbosity=0).run(http_codes_suite())
+  except Exception,e:
+    print >> stderr, "Exception Encountered: %s" % e.message
+    print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
+    exit(1)
   total+=result.testsRun
   failures+=len(result.failures)
   if not result.wasSuccessful():
