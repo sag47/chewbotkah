@@ -16,7 +16,7 @@ from optparse import OptionParser
 VERSION = '0.1.1'
 start_url='http://example.com/'
 domain_filter='example.com'
-wrong_url_excludes=['iana.org']
+href_whitelist=['']
 
 class TestWrongUrls(unittest.TestCase):
   def __init__(self,domain_filter,page,link):
@@ -56,7 +56,7 @@ def crawl_suite():
   for page in pages.keys():
     for link in pages[page]:
       warn=True
-      for rule in wrong_url_excludes:
+      for rule in href_whitelist:
         if len(rule) > 0 and rule in link:
           warn=False
       if warn:
@@ -102,20 +102,20 @@ Examples:
   parser = OptionParser(usage=usage,version='%prog ' + VERSION)
   parser.add_option('-d','--domain-filter',dest="domain_filter", help="This filter stops the crawler from traversing the whole web.  This will restrict the crawler to a url pattern", metavar="STRING")
   parser.add_option('-t','--target-url',dest="start_url", help="This is the target page in which the crawler will start.", metavar="URL")
-  parser.add_option('-e','--wrong-url-excludes',dest="wrong_url_excludes", help="This is a comma separated list which prevents the crawler from warning about.", metavar="LIST")
-  parser.set_defaults(domain_filter=domain_filter,start_url=start_url,wrong_url_excludes=','.join(wrong_url_excludes))
+  parser.add_option('-w','--href-whitelist',dest="href_whitelist", help="This is a comma separated list which enables a whitelist of any href links that don't match the --domain-filter to pass and all other references to fail.  Part of test Suite 1.", metavar="LIST")
+  parser.set_defaults(domain_filter=domain_filter,start_url=start_url,href_whitelist=','.join(href_whitelist))
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
   start_url=options.start_url
   domain_filter=options.domain_filter
-  wrong_url_excludes=options.wrong_url_excludes.strip().split(',')
+  href_whitelist=options.href_whitelist.strip().split(',')
 
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
   print >> stderr, "Target: %s" % start_url
   print >> stderr, "Domain Filter: %s" % domain_filter
-  print >> stderr, "Wrong URL Excludes: %s" % ','.join(wrong_url_excludes)
+  print >> stderr, "Wrong URL Excludes: %s" % ','.join(href_whitelist)
   print >> stderr, "Crawling site for bad links in html..."
   result=unittest.TextTestRunner(verbosity=0).run(crawl_suite())
   total+=result.testsRun
