@@ -1,3 +1,10 @@
+## v0.1.2
+
+* `--request-delay` option added.
+* Renamed `--wrong-url-excludes` to `--href-whitelist`.
+
+
+---
 ## v0.1.1
 
 * Fixed `crawler.py` bugs in `qa_nettools` package.
