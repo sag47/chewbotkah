@@ -13,12 +13,14 @@ from datetime import datetime
 from sys import stderr
 from optparse import OptionParser
 from urllib2 import URLError
+from re import match
 
 VERSION = '0.1.2'
 start_url='http://example.com/'
 domain_filter='example.com'
 href_whitelist=['iana.org']
 delay=0.0
+skip_suites=[]
 
 class TestWrongUrls(unittest.TestCase):
   def __init__(self,domain_filter,page,link):
@@ -128,7 +130,12 @@ Examples:
   parser.add_option('-t','--target-url',dest="start_url", help="This is the target page in which the crawler will start.", metavar="URL")
   parser.add_option('-w','--href-whitelist',dest="href_whitelist", help="This is a comma separated list which enables a whitelist of any href links that don't match the --domain-filter to pass and all other references to fail.  Part of test Suite 1.", metavar="LIST")
   parser.add_option('--request-delay',dest="delay", help="Delay all requests by number of seconds.  This number can be a floating point for sub-second precision.", metavar="SECONDS")
-  parser.set_defaults(domain_filter=domain_filter,start_url=start_url,href_whitelist=','.join(href_whitelist),delay=delay)
+  parser.add_option('--skip-suites',dest="skip_suites", help="Delay all requests by number of seconds.  This number can be a floating point for sub-second precision.", metavar="SECONDS")
+  parser.set_defaults(domain_filter=domain_filter,
+                      start_url=start_url,
+                      href_whitelist=','.join(href_whitelist),
+                      delay=delay,
+                      skip_suites=','.join(skip_suites))
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
@@ -136,6 +143,12 @@ Examples:
   domain_filter=options.domain_filter
   href_whitelist=options.href_whitelist.strip().split(',')
   delay=float(options.delay)
+  for suite in options.skip_suites.strip().split(','):
+    if  match('^[0-9]+-[0-9]+$',suite):
+      for x in range(int(suite.split('-')[0]),int(suite.split('-')[1])+1):
+        skip_suites.append(str(x))
+    else:
+      skip_suites.append(suite)
 
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
@@ -149,28 +162,34 @@ Examples:
   crawl(delay)
   print >> stderr, "Done."
 
-  print >> stderr, "\n"+"#"*70
-  print >> stderr, "Running Test Suite 1: Check for non-authorized links based on HREF Whitelist and Domain Filter."
-  result=unittest.TextTestRunner(verbosity=0).run(href_suite())
-  total+=result.testsRun
-  failures+=len(result.failures)
-  if not result.wasSuccessful():
-    STATUS=1
+  #start of suite 1
+  if not '1' in skip_suites:
+    print >> stderr, "\n"+"#"*70
+    print >> stderr, "Running Test Suite 1: Check for non-authorized links based on HREF Whitelist and Domain Filter."
+    result=unittest.TextTestRunner(verbosity=0).run(href_suite())
+    total+=result.testsRun
+    failures+=len(result.failures)
+    if not result.wasSuccessful():
+      STATUS=1
+  #end of suite 1
 
-  print >> stderr, "\n"+"#"*70
-  print >> stderr, "Running Test Suite 2: Checking HTTP status codes of all site resources."
-  if not delay == 0:
-    print "Request delay: %f" % delay
-  try:
-    result=unittest.TextTestRunner(verbosity=0).run(http_codes_suite())
-  except Exception,e:
-    print >> stderr, "Exception Encountered: %s" % e.message
-    print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
-    exit(1)
-  total+=result.testsRun
-  failures+=len(result.failures)
-  if not result.wasSuccessful():
-    STATUS=1
+  #start of suite 2
+  if not '2' in skip_suites:
+    print >> stderr, "\n"+"#"*70
+    print >> stderr, "Running Test Suite 2: Checking HTTP status codes of all site resources."
+    if not delay == 0:
+      print "Request delay: %f" % delay
+    try:
+      result=unittest.TextTestRunner(verbosity=0).run(http_codes_suite())
+    except Exception,e:
+      print >> stderr, "Exception Encountered: %s" % e.message
+      print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
+      exit(1)
+    total+=result.testsRun
+    failures+=len(result.failures)
+    if not result.wasSuccessful():
+      STATUS=1
+  #end of suite 2
 
   endtime=datetime.now()
   print >> stderr, "\n"+"#"*70
