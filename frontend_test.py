@@ -22,7 +22,7 @@ from urllib2 import URLError
 VERSION = '0.1.2'
 start_url='http://example.com/'
 domain_filter='example.com'
-href_whitelist=['iana.org']
+href_whitelist=['']
 delay=0.0
 skip_suites=[]
 
@@ -242,7 +242,7 @@ Examples:
     print >> stderr, "Domain Filter: %s" % domain_filter
     print >> stderr, "HREF Whitelist: %s" % ','.join(href_whitelist)
 
-
+  #start of crawl stage
   if len(options.load_crawl) == 0:
     print >> stderr, "Crawling site..."
     crawl()
@@ -263,7 +263,7 @@ Examples:
     except Exception,e:
       print >> stderr, "Not a valid crawl data file!  Aborting."
       exit(1)
-
+  #end of crawl stage
 
   #start of suite 1
   if not '1' in skip_suites:
