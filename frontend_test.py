@@ -96,7 +96,7 @@ def http_codes_suite():
     http_details = nc.get_http_details()
     for status,method,resource,size,time in http_details:
       if method == 'GET':
-        if not status == 301 or not status == 302:
+        if not status == 301 and not status == 302:
           suite.addTest(TestBadResources(page,resource,status))
   return suite
 
