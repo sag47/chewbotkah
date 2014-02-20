@@ -27,6 +27,9 @@ delay=0.0
 skip_suites=[]
 
 class TestWrongUrls(unittest.TestCase):
+  """
+    Test function part of test suite 1
+  """
   def __init__(self,domain_filter,page,link):
     super(TestWrongUrls,self).__init__()
     self.domain_filter=domain_filter
@@ -40,6 +43,9 @@ class TestWrongUrls(unittest.TestCase):
                       'link': self.link})
 
 class TestBadResources(unittest.TestCase):
+  """
+    Test function part of test suite 2
+  """
   def __init__(self,page,resource,status):
     super(TestBadResources,self).__init__()
     self.page=page
@@ -50,7 +56,24 @@ class TestBadResources(unittest.TestCase):
                      200,
                      msg="\n\nOn page: %(page)s\nResource: %(resource)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
-                         'resource' :self.resource,
+                         'resource': self.resource,
+                         'status': self.status})
+
+class TestBadLinks(unittest.TestCase):
+  """
+    Test function part of test suite 3
+  """
+  def __init__(self,page,link,status):
+    super(TestBadResources,self).__init__()
+    self.page=page
+    self.status=status
+    self.link=link
+  def runTest(self):
+    self.assertEqual(int(self.status),
+                     200,
+                     msg="\n\nOn page: %(page)s\nBad Link: %(link)s\nReturned HTTP Status: %(status)s" % {
+                         'page': self.page,
+                         'link': self.link,
                          'status': self.status})
 
 def href_suite():
@@ -76,7 +99,6 @@ def resource_status_codes_suite():
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
   """
   from socket import error
-  global delay
   try:
     sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
     sel.start('captureNetworkTraffic=true')
@@ -88,7 +110,7 @@ def resource_status_codes_suite():
     sel.open(page)
     #wait for javascript to potentially execute
     if delay != 0:
-      sleep(0.3)
+      sleep(delay)
     raw_xml = sel.captureNetworkTraffic('xml')
     traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
     #network traffic details
@@ -100,7 +122,43 @@ def resource_status_codes_suite():
           suite.addTest(TestBadResources(page,resource,status))
   return suite
 
-def crawl(delay=0.0):
+def link_status_codes_suite():
+  """
+    Test Suite 3
+    This suite loads every link reference on every page and checks for bad links in the HTML.  These are inline href <a> links in a page.
+  """
+  from socket import error
+  tested_links=[]
+  try:
+    sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
+    sel.start('captureNetworkTraffic=true')
+  except error,e:
+    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
+    exit(1)
+  suite = unittest.TestSuite()
+  for page in pages.keys():
+    for linked_page in pages[page]:
+      sel.open(linked_page)
+      #wait for javascript to potentially execute
+      if delay != 0:
+        sleep(delay)
+      raw_xml = sel.captureNetworkTraffic('xml')
+      traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
+      #network traffic details
+      nc = NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
+      http_details = nc.get_http_details()
+      if linked_page[-1] == '/':
+        slash = linked_page
+        noslash = linked_page[:-1]
+      else:
+        slash = linked_page + '/'
+        noslash = linked_page
+      for status,method,link,size,time in http_details:
+        if link == slash or link == noslash:
+          suite.addTest(TestBadResources(page,linked_page,status))
+  return suite
+
+def crawl():
   """
     The crawl function calls a crawler to gather data about a website which can be used by other test suites.
   """
@@ -177,7 +235,7 @@ Examples:
 
   if len(options.load_crawl) == 0:
     print >> stderr, "Crawling site..."
-    crawl(delay)
+    crawl()
     if len(options.save_crawl) > 0:
       print >> stderr, "Saving crawl data: %s" % options.save_crawl
       try:
@@ -225,6 +283,24 @@ Examples:
     if not result.wasSuccessful():
       STATUS=1
   #end of suite 2
+
+  #start of suite 3
+  if not '3' in skip_suites:
+    print >> stderr, "\n"+"#"*70
+    print >> stderr, "Running Test Suite 3: Checking HTTP status codes of all inline links."
+    if not delay == 0:
+      print "Request delay: %f" % delay
+    try:
+      result=unittest.TextTestRunner(verbosity=0).run(link_status_codes_suite())
+    except Exception,e:
+      print >> stderr, "Exception Encountered: %s" % e.message
+      print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
+      exit(1)
+    total+=result.testsRun
+    failures+=len(result.failures)
+    if not result.wasSuccessful():
+      STATUS=1
+  #end of suite 3
 
   endtime=datetime.now()
   print >> stderr, "\n"+"#"*70
