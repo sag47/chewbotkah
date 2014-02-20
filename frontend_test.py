@@ -4,20 +4,20 @@
 #Ubuntu 13.10
 #Linux 3.11.0-12-generic x86_64
 #Python 2.7.5+
-import unittest
+import json
 import selenium
+import unittest
+from datetime import datetime
+from optparse import OptionParser
+from os.path import isfile
+from qa_nettools import NetworkCapture
+from re import match
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from qa_nettools import NetworkCapture
-from datetime import datetime
-from sys import stderr
-from optparse import OptionParser
-from urllib2 import URLError
-from re import match
-from time import sleep
-from os.path import isfile
-import json
 from sys import exit
+from sys import stderr
+from time import sleep
+from urllib2 import URLError
 
 VERSION = '0.1.2'
 start_url='http://example.com/'
@@ -92,11 +92,12 @@ def http_codes_suite():
     raw_xml = sel.captureNetworkTraffic('xml')
     traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
     #network traffic details
-    nc = NetworkCapture(traffic_xml)
+    nc = NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
     http_details = nc.get_http_details()
     for status,method,resource,size,time in http_details:
       if method == 'GET':
-        suite.addTest(TestBadResources(page,resource,status))
+        if not status == 301 or not status == 302:
+          suite.addTest(TestBadResources(page,resource,status))
   return suite
 
 def crawl(delay=0.0):
