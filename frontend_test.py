@@ -75,13 +75,14 @@ def http_codes_suite():
     Test Suite 2
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
   """
+  from socket import error
   global delay
   try:
     sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
-  except URLError,e:
+    sel.start('captureNetworkTraffic=true')
+  except error,e:
     print >> stderr, "Could not open connection to Selenium.  Did you start it?"
     exit(1)
-  sel.start('captureNetworkTraffic=true')
   suite = unittest.TestSuite()
   for page in pages.keys():
     sel.open(page)
