@@ -128,7 +128,10 @@ def link_status_codes_suite():
     This suite loads every link reference on every page and checks for bad links in the HTML.  These are inline href <a> links in a page.
   """
   from socket import error
-  tested_links=[]
+  #good tested and bad_tested links are so the program
+  #can skip links rather than double test
+  #link is the key, http status code is the value
+  tested_links={}
   try:
     sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
     sel.start('captureNetworkTraffic=true')
@@ -138,6 +141,12 @@ def link_status_codes_suite():
   suite = unittest.TestSuite()
   for page in pages.keys():
     for linked_page in pages[page]:
+      if not linked_page[0:4] == 'http':
+        continue
+      #if link has already been tested then skip the network write the test
+      if linked_page in tested_links.keys():
+        suite.addTest(TestBadResources(page,linked_page,tested_links[linked_page]))
+        continue
       sel.open(linked_page)
       #wait for javascript to potentially execute
       if delay != 0:
@@ -156,6 +165,7 @@ def link_status_codes_suite():
       for status,method,link,size,time in http_details:
         if link == slash or link == noslash:
           suite.addTest(TestBadResources(page,linked_page,status))
+          tested_links[linked_page]=status
   return suite
 
 def crawl():
