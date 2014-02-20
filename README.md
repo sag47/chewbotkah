@@ -35,6 +35,8 @@ The testing stages are organized into Suites.  Currently there are only 3 suites
 
 ## Program Options
 
+The following options are available for `frontend_test.py`.
+
 * `-t URL`, `--target-url=URL` - This is the target page in which the crawler will start.
 * `-d STRING`, `--domain-filter=STRING` - This filter stops the crawler from traversing the whole web.  This will restrict the crawler to a url pattern.
 * `-w LIST`, `--href-whitelist=LIST` - This is a comma separated list which enables a whitelist of any href links that don't match the `--domain-filter` to pass and all other references to fail.  Part of test Suite 1.
