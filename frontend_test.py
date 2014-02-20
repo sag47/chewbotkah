@@ -201,11 +201,11 @@ Description:
 Examples:
 %prog -t 'https://nts.drexel.edu/modules/' -d 'nts.drexel.edu/modules' -e 'www.drexel.edu,goodwin.drexel.edu'"""
   parser = OptionParser(usage=usage,version='%prog ' + VERSION)
-  parser.add_option('-d','--domain-filter',dest="domain_filter", help="This filter stops the crawler from traversing the whole web.  This will restrict the crawler to a url pattern", metavar="STRING")
   parser.add_option('-t','--target-url',dest="start_url", help="This is the target page in which the crawler will start.", metavar="URL")
+  parser.add_option('-d','--domain-filter',dest="domain_filter", help="This filter stops the crawler from traversing the whole web.  This will restrict the crawler to a url pattern.", metavar="STRING")
   parser.add_option('-w','--href-whitelist',dest="href_whitelist", help="This is a comma separated list which enables a whitelist of any href links that don't match the --domain-filter to pass and all other references to fail.  Part of test Suite 1.", metavar="LIST")
   parser.add_option('--request-delay',dest="delay", help="Delay all requests by number of seconds.  This number can be a floating point for sub-second precision.", metavar="SECONDS")
-  parser.add_option('--skip-suites',dest="skip_suites", help="Skip test suites to avoid running them.  Comma separated list of numbers or ranges", metavar="NUM")
+  parser.add_option('--skip-suites',dest="skip_suites", help="Skip test suites to avoid running them.  Comma separated list of numbers or ranges.", metavar="NUM")
   parser.add_option('--save-crawl',dest="save_crawl", help="Save your crawl data to a JSON formatted file.", metavar="FILE")
   parser.add_option('--load-crawl',dest="load_crawl", help="Load JSON formatted crawl data instead of crawling.", metavar="FILE")
   parser.set_defaults(domain_filter=domain_filter,
