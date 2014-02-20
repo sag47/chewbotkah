@@ -169,9 +169,10 @@ Examples:
 
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
-  print >> stderr, "Target: %s" % start_url
-  print >> stderr, "Domain Filter: %s" % domain_filter
-  print >> stderr, "HREF Whitelist: %s" % ','.join(href_whitelist)
+  if len(options.load_crawl) == 0:
+    print >> stderr, "Target: %s" % start_url
+    print >> stderr, "Domain Filter: %s" % domain_filter
+    print >> stderr, "HREF Whitelist: %s" % ','.join(href_whitelist)
 
 
   if len(options.load_crawl) == 0:
