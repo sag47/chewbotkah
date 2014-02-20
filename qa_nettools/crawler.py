@@ -36,7 +36,7 @@ class crawler():
       if '?' in url:
         url=url.split('?')[0]
       if url in self.pages:
-        return ''
+        return
       self.pages[url]=[]
       self.driver.get(url)
       tags=[]
@@ -48,7 +48,7 @@ class crawler():
             self.pages[url].append(tag.get_attribute('href'))
       if len(self.pages[url]) > 0:
         for link in self.pages[url]:
-          if (self.domain_filter in link) and not ('#' in link) and not (link in self.pages.keys()):
+          if (self.domain_filter in link) and not ('#' in link) and not (link in self.pages.keys()) and link[0:4] == 'http':
             self._consume(link)
     except Exception,e:
       pass
