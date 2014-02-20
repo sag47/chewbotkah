@@ -5,6 +5,8 @@
 * `--save-crawl` option added.  Save your crawl data for later use.
 * `--load-crawl` option added.  Load previously saved crawl data instead of crawling.
 * Renamed `--wrong-url-excludes` to `--href-whitelist`.
+* Fixed bug unicode error exception thrown when profiling pages.
+* Fixed bug `301` or `302` redirects detected during test suite 2.
 
 
 ---
