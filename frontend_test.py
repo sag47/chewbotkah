@@ -194,10 +194,10 @@ Examples:
   endtime=datetime.now()
   print >> stderr, "\n"+"#"*70
   print >> stderr, "Total: Ran %s tests." % str(total)
-  if failures == 0:
-    print >> stderr, "All OK!"
-  else:
+  if not failures == 0:
     print >> stderr, "%(failures)d failed tests." % {'failures': failures}
+  elif not total == 0:
+    print >> stderr, "All OK!"
   mins=(endtime-starttime).seconds/60
   secs=(endtime-starttime).seconds
   microsecs=(endtime-starttime).microseconds/1000000.0
