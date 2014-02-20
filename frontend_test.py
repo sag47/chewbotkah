@@ -14,6 +14,10 @@ from sys import stderr
 from optparse import OptionParser
 from urllib2 import URLError
 from re import match
+from time import sleep
+from os.path import isfile
+import json
+from sys import exit
 
 VERSION = '0.1.2'
 start_url='http://example.com/'
@@ -71,9 +75,12 @@ def http_codes_suite():
     Test Suite 2
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
   """
-  from time import sleep
   global delay
-  sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
+  try:
+    sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
+  except URLError,e:
+    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
+    exit(1)
   sel.start('captureNetworkTraffic=true')
   suite = unittest.TestSuite()
   for page in pages.keys():
@@ -95,7 +102,6 @@ def crawl(delay=0.0):
   """
     The crawl function calls a crawler to gather data about a website which can be used by other test suites.
   """
-  from sys import exit
   from qa_nettools import crawler
   global pages
   try:
@@ -110,7 +116,6 @@ def crawl(delay=0.0):
   driver.quit
 
 if __name__ == '__main__':
-  from sys import exit
   STATUS=0
   total=0
   failures=0
@@ -130,15 +135,25 @@ Examples:
   parser.add_option('-t','--target-url',dest="start_url", help="This is the target page in which the crawler will start.", metavar="URL")
   parser.add_option('-w','--href-whitelist',dest="href_whitelist", help="This is a comma separated list which enables a whitelist of any href links that don't match the --domain-filter to pass and all other references to fail.  Part of test Suite 1.", metavar="LIST")
   parser.add_option('--request-delay',dest="delay", help="Delay all requests by number of seconds.  This number can be a floating point for sub-second precision.", metavar="SECONDS")
-  parser.add_option('--skip-suites',dest="skip_suites", help="Skip test suites to avoid running them.", metavar="SECONDS")
+  parser.add_option('--skip-suites',dest="skip_suites", help="Skip test suites to avoid running them.  Comma separated list of numbers or ranges", metavar="NUM")
+  parser.add_option('--save-crawl',dest="save_crawl", help="Save your crawl data to a JSON formatted file.", metavar="FILE")
+  parser.add_option('--load-crawl',dest="load_crawl", help="Load JSON formatted crawl data to be loaded for testing.  Does not crawl if this option is selected.", metavar="FILE")
   parser.set_defaults(domain_filter=domain_filter,
                       start_url=start_url,
                       href_whitelist=','.join(href_whitelist),
                       delay=delay,
-                      skip_suites=','.join(skip_suites))
+                      skip_suites=','.join(skip_suites),
+                      save_crawl='',
+                      load_crawl='')
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
+  if len(options.save_crawl) > 0 and len(options.load_crawl) > 0:
+    print >> stderr, "Incompatible options selected.  May not load a crawl and save a crawl."
+    exit(1)
+  if len(options.load_crawl) > 0 and not isfile(options.load_crawl):
+    print >> stderr, "Crawl file does not exist!"
+    exit(1)
   start_url=options.start_url
   domain_filter=options.domain_filter
   href_whitelist=options.href_whitelist.strip().split(',')
@@ -157,10 +172,27 @@ Examples:
   print >> stderr, "HREF Whitelist: %s" % ','.join(href_whitelist)
 
 
-  print >> stderr, "\n"+"#"*70
-  print >> stderr, "Crawling site..."
-  crawl(delay)
-  print >> stderr, "Done."
+  if len(options.load_crawl) == 0:
+    print >> stderr, "Crawling site..."
+    crawl(delay)
+    if len(options.save_crawl) > 0:
+      print >> stderr, "Saving crawl data: %s" % options.save_crawl
+      try:
+        f=open(options.save_crawl,'w')
+        json.dump(pages,f)
+        f.close()
+      except Exception,e:
+        print >> stderr, "Error: %s" % e.message
+  else:
+    print >> stderr, "Load crawl data: %s" % options.load_crawl
+    try:
+      f=open(options.load_crawl,'r')
+      pages=json.load(f)
+      f.close()
+    except Exception,e:
+      print >> stderr, "Not a valid crawl data file!  Aborting."
+      exit(1)
+
 
   #start of suite 1
   if not '1' in skip_suites:
