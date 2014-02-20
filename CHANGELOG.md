@@ -1,7 +1,9 @@
 ## v0.1.2
 
-* `--request-delay` option added.
+* `--request-delay` option added.  Delay the time in between network requests of crawler and unit tests.
 * `--skip-suites` option added.  Now specific testing suites can be avoided or none run at all.
+* `--save-crawl` option added.  Save your crawl data for later use.
+* `--load-crawl` option added.  Load previously saved crawl data instead of crawling.
 * Renamed `--wrong-url-excludes` to `--href-whitelist`.
 
 
