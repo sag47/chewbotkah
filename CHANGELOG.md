@@ -1,5 +1,6 @@
 ## v0.1.2
 
+* Added test suite 3.  Test the status codes of links in HTML.
 * `--request-delay` option added.  Delay the time in between network requests of crawler and unit tests.
 * `--skip-suites` option added.  Now specific testing suites can be avoided or none run at all.
 * `--save-crawl` option added.  Save your crawl data for later use.
