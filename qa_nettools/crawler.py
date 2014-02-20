@@ -7,6 +7,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sys import stderr
+from time import sleep
 
 class crawler():
   """
@@ -24,27 +25,30 @@ class crawler():
     Careful, this script is designed to crawl a whole website and find all pages.  If a site is large enough consider splitting up the work and refining the domain_filter.
   """
   pages={}
-  def __init__(self,driver,domain_filter="example.com"):
+  def __init__(self,driver,domain_filter="example.com",delay=0):
     if domain_filter == "example.com":
       print >> stderr, "Warning: your crawler is initialized with example.com."
     self.driver=driver
     self.domain_filter=domain_filter
+    self.delay=delay
   def _consume(self,url):
     try:
       if '?' in url:
         url=url.split('?')[0]
       if url in self.pages:
-        return ''
+        return
       self.pages[url]=[]
       self.driver.get(url)
       tags=[]
+      if self.delay > 0:
+        sleep(self.delay)
       if len(self.driver.find_elements_by_tag_name('a')) > 0:
         for tag in self.driver.find_elements_by_tag_name('a'):
           if not type(tag.get_attribute('href')) == type(None):
             self.pages[url].append(tag.get_attribute('href'))
       if len(self.pages[url]) > 0:
         for link in self.pages[url]:
-          if (self.domain_filter in link) and not ('#' in link) and not (link in self.pages.keys()):
+          if (self.domain_filter in link) and not ('#' in link) and not (link in self.pages.keys()) and link[0:4] == 'http':
             self._consume(link)
     except Exception,e:
       pass
