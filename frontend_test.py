@@ -70,7 +70,7 @@ def href_suite():
         suite.addTest(TestWrongUrls(domain_filter,page,link))
   return suite
 
-def http_codes_suite():
+def resource_status_codes_suite():
   """
     Test Suite 2
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
@@ -96,7 +96,7 @@ def http_codes_suite():
     http_details = nc.get_http_details()
     for status,method,resource,size,time in http_details:
       if method == 'GET':
-        if not status == 301 and not status == 302:
+        if not status == 301 and not status == 302 and not resource == page:
           suite.addTest(TestBadResources(page,resource,status))
   return suite
 
@@ -214,7 +214,7 @@ Examples:
     if not delay == 0:
       print "Request delay: %f" % delay
     try:
-      result=unittest.TextTestRunner(verbosity=0).run(http_codes_suite())
+      result=unittest.TextTestRunner(verbosity=0).run(resource_status_codes_suite())
     except Exception,e:
       print >> stderr, "Exception Encountered: %s" % e.message
       print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
