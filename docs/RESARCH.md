@@ -8,6 +8,7 @@
 * [chromedriver binary downloads](http://chromedriver.storage.googleapis.com/index.html?path=2.9/)
 * [List of cli chrome options](http://peter.sh/experiments/chromium-command-line-switches/)
 * [Take a screenshot](http://stackoverflow.com/questions/8900073/webdriver-screenshot)
+* [Webdriver advanced usage](http://docs.seleniumhq.org/docs/04_webdriver_advanced.jsp)
 
 # Unit Testing References
 
