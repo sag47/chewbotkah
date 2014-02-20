@@ -281,7 +281,7 @@ Examples:
     print >> stderr, "\n"+"#"*70
     print >> stderr, "Running Test Suite 2: Checking HTTP status codes of all site resources."
     if not delay == 0:
-      print "Request delay: %f" % delay
+      print >> stderr, "Request delay: %f" % delay
     try:
       result=unittest.TextTestRunner(verbosity=0).run(resource_status_codes_suite())
     except Exception,e:
@@ -299,7 +299,7 @@ Examples:
     print >> stderr, "\n"+"#"*70
     print >> stderr, "Running Test Suite 3: Checking HTTP status codes of all inline links."
     if not delay == 0:
-      print "Request delay: %f" % delay
+      print >> stderr, "Request delay: %f" % delay
     try:
       result=unittest.TextTestRunner(verbosity=0).run(link_status_codes_suite())
     except Exception,e:
