@@ -1,6 +1,7 @@
 ## v0.1.2
 
 * `--request-delay` option added.
+* `--skip-suites` option added.  Now specific testing suites can be avoided or none run at all.
 * Renamed `--wrong-url-excludes` to `--href-whitelist`.
 
 
