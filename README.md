@@ -27,10 +27,21 @@ Currently there are only two stages.
 
 ## Suites
 
-The testing stages are organized into Suites.  Currently there are only 2 suites.
+The testing stages are organized into Suites.  Currently there are only 3 suites.
 
 * Suite 1 - This suite analyzes crawler data and checks for links that are not approved through whitelist or do not match the `--domain-filter`.  This operates on the `href` attribute of `<a>` element in the scrape data.  This does not actually perform any network requests but uses the crawl data.
 * Suite 2 - This suite profiles the loading of each page on the domain from crawler data and determins if there are any non-200 HTTP status resources loading on each page.  This only tests the crawler indexes and does not check links within pages.
+* Suite 3 - This suite loads every hyperlink reference on every page and checks for bad links in the HTML.  This test may go off site to test a link.
+
+## Program Options
+
+* `-t URL`, `--target-url=URL` - This is the target page in which the crawler will start.
+* `-d STRING`, `--domain-filter=STRING` - This filter stops the crawler from traversing the whole web.  This will restrict the crawler to a url pattern.
+* `-w LIST`, `--href-whitelist=LIST` - This is a comma separated list which enables a whitelist of any href links that don't match the `--domain-filter` to pass and all other references to fail.  Part of test Suite 1.
+* `--request-delay=SECONDS` - Delay all requests by number of seconds.  This number can be a floating point for sub-second precision.
+* `--skip-suites=NUM` - Skip test suites to avoid running them.  Comma separated list of numbers or ranges.
+* `--save-crawl=FILE` - Save your crawl data to a JSON formatted file.
+* `--load-crawl=FILE` - Load JSON formatted crawl data instead of crawling.
 
 ## Commonly encountered exceptions
 
