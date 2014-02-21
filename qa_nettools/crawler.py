@@ -25,18 +25,27 @@ class crawler():
     Careful, this script is designed to crawl a whole website and find all pages.  If a site is large enough consider splitting up the work and refining the domain_filter.
   """
   pages={}
-  def __init__(self,driver,domain_filter="example.com",delay=0):
+  def __init__(self,driver,domain_filter="example.com",delay=0,excludes=""):
     if domain_filter == "example.com":
       print >> stderr, "Warning: your crawler is initialized with example.com."
     self.driver=driver
     self.domain_filter=domain_filter
     self.delay=delay
+    self.excludes=excludes
   def _consume(self,url):
     try:
       if '?' in url:
         url=url.split('?')[0]
       if url in self.pages:
         return
+      #exclude patterns
+      skip=False
+      for rule in self.excludes.strip().split(','):
+        if rule in url:
+          skip=True
+      if skip:
+        return
+      #end exclude patterns
       self.pages[url]=[]
       self.driver.get(url)
       tags=[]
