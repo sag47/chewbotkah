@@ -1,3 +1,8 @@
+## v0.1.3
+
+* `--crawler-excludes` option added.
+* Major bugfix suite 3.  Previously it was not working.  Since I'm only concerned with HTTP status codes am using `urllib2` instead.
+
 ## v0.1.2
 
 * Added test suite 3.  Test the status codes of links in HTML.

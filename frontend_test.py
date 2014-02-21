@@ -7,6 +7,7 @@
 import json
 import selenium
 import unittest
+import urllib2
 from datetime import datetime
 from optparse import OptionParser
 from os.path import isfile
@@ -17,7 +18,6 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sys import exit
 from sys import stderr
 from time import sleep
-from urllib2 import URLError
 
 VERSION = '0.1.2'
 start_url='http://example.com/'
@@ -25,6 +25,7 @@ domain_filter='example.com'
 href_whitelist=['']
 delay=0.0
 skip_suites=[]
+crawler_excludes='.exe,.dmg'
 
 class TestWrongUrls(unittest.TestCase):
   """
@@ -132,40 +133,17 @@ def link_status_codes_suite():
   #can skip links rather than double test
   #link is the key, http status code is the value
   tested_links={}
-  try:
-    sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
-    sel.start('captureNetworkTraffic=true')
-  except error,e:
-    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
-    exit(1)
   suite = unittest.TestSuite()
   for page in pages.keys():
     for linked_page in pages[page]:
-      if not linked_page[0:4] == 'http':
-        continue
-      #if link has already been tested then skip the network write the test
-      if linked_page in tested_links.keys():
-        suite.addTest(TestBadResources(page,linked_page,tested_links[linked_page]))
-        continue
-      sel.open(linked_page)
-      #wait for javascript to potentially execute
-      if delay != 0:
-        sleep(delay)
-      raw_xml = sel.captureNetworkTraffic('xml')
-      traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
-      #network traffic details
-      nc = NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
-      http_details = nc.get_http_details()
-      if linked_page[-1] == '/':
-        slash = linked_page
-        noslash = linked_page[:-1]
-      else:
-        slash = linked_page + '/'
-        noslash = linked_page
-      for status,method,link,size,time in http_details:
-        if link == slash or link == noslash:
-          suite.addTest(TestBadResources(page,linked_page,status))
-          tested_links[linked_page]=status
+      if linked_page[0:4] == 'http':
+        if linked_page in tested_links.keys():
+          #if the URL has already been tested then skip testing and give the status
+          suite.addTest(TestBadResources(page,linked_page,tested_links[linked_page]))
+        else:
+          result=urllib2.urlopen(linked_page)
+          suite.addTest(TestBadResources(page,linked_page,result.getcode()))
+          tested_links[linked_page]=result.getcode()
   return suite
 
 def crawl():
@@ -176,12 +154,12 @@ def crawl():
   global pages
   try:
     driver=webdriver.Remote(command_executor='http://127.0.0.1:4444/wd/hub',desired_capabilities=DesiredCapabilities.FIREFOX)
-  except URLError,e:
+  except urllib2.URLError,e:
     print >> stderr, "Could not open connection to Selenium.  Did you start it?"
     exit(1)
   if not delay == 0:
     print >> stderr, "Crawler request delay: %f seconds" % delay
-  crawler=crawler(driver,domain_filter=domain_filter,delay=delay)
+  crawler=crawler(driver,domain_filter=domain_filter,delay=delay,excludes=crawler_excludes)
   pages=crawler.crawl(start_url)
   driver.quit
 
@@ -208,13 +186,15 @@ Examples:
   parser.add_option('--skip-suites',dest="skip_suites", help="Skip test suites to avoid running them.  Comma separated list of numbers or ranges.", metavar="NUM")
   parser.add_option('--save-crawl',dest="save_crawl", help="Save your crawl data to a JSON formatted file.", metavar="FILE")
   parser.add_option('--load-crawl',dest="load_crawl", help="Load JSON formatted crawl data instead of crawling.", metavar="FILE")
+  parser.add_option('--crawler-excludes',dest="crawler_excludes", help="Comma separated word list.  If word is in URL then the crawler won't attempt to crawl it.", metavar="LIST")
   parser.set_defaults(domain_filter=domain_filter,
                       start_url=start_url,
                       href_whitelist=','.join(href_whitelist),
                       delay=delay,
                       skip_suites=','.join(skip_suites),
                       save_crawl='',
-                      load_crawl='')
+                      load_crawl='',
+                      crawler_excludes=crawler_excludes)
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
@@ -227,6 +207,7 @@ Examples:
   start_url=options.start_url
   domain_filter=options.domain_filter
   href_whitelist=options.href_whitelist.strip().split(',')
+  crawler_excludes=options.crawler_excludes
   delay=float(options.delay)
   for suite in options.skip_suites.strip().split(','):
     if  match('^[0-9]+-[0-9]+$',suite):
@@ -240,11 +221,11 @@ Examples:
   if len(options.load_crawl) == 0:
     print >> stderr, "Target: %s" % start_url
     print >> stderr, "Domain Filter: %s" % domain_filter
-    print >> stderr, "HREF Whitelist: %s" % ','.join(href_whitelist)
 
   #start of crawl stage
   if len(options.load_crawl) == 0:
     print >> stderr, "Crawling site..."
+    print >> stderr, "Crawler Excludes: %s" % crawler_excludes
     crawl()
     if len(options.save_crawl) > 0:
       print >> stderr, "Saving crawl data: %s" % options.save_crawl
@@ -269,6 +250,7 @@ Examples:
   if not '1' in skip_suites:
     print >> stderr, "\n"+"#"*70
     print >> stderr, "Running Test Suite 1: Check for non-authorized links based on HREF Whitelist and Domain Filter."
+    print >> stderr, "HREF Whitelist: %s" % ','.join(href_whitelist)
     result=unittest.TextTestRunner(verbosity=0).run(href_suite())
     total+=result.testsRun
     failures+=len(result.failures)
@@ -300,12 +282,7 @@ Examples:
     print >> stderr, "Running Test Suite 3: Checking HTTP status codes of all inline links."
     if not delay == 0:
       print >> stderr, "Request delay: %f" % delay
-    try:
-      result=unittest.TextTestRunner(verbosity=0).run(link_status_codes_suite())
-    except Exception,e:
-      print >> stderr, "Exception Encountered: %s" % e.message
-      print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
-      exit(1)
+    result=unittest.TextTestRunner(verbosity=0).run(link_status_codes_suite())
     total+=result.testsRun
     failures+=len(result.failures)
     if not result.wasSuccessful():

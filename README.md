@@ -44,6 +44,7 @@ The following options are available for `frontend_test.py`.
 * `--skip-suites=NUM` - Skip test suites to avoid running them.  Comma separated list of numbers or ranges.
 * `--save-crawl=FILE` - Save your crawl data to a JSON formatted file.
 * `--load-crawl=FILE` - Load JSON formatted crawl data instead of crawling.
+* `--crawler-excludes=LIST` - Comma separated word list.  If word is in URL then the crawler won't attempt to crawl it.
 
 ## Commonly encountered exceptions
 
