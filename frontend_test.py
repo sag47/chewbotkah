@@ -141,7 +141,11 @@ def link_status_codes_suite():
           #if the URL has already been tested then skip testing and give the status
           suite.addTest(TestBadResources(page,linked_page,tested_links[linked_page]))
         else:
-          result=urllib2.urlopen(linked_page)
+          try:
+            result=urllib2.urlopen(linked_page)
+          except urllib2.HTTPError,result:
+            #HTTPError has a getcode() function
+            pass
           suite.addTest(TestBadResources(page,linked_page,result.getcode()))
           tested_links[linked_page]=result.getcode()
   return suite
