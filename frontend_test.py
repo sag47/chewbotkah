@@ -6,6 +6,7 @@
 #Python 2.7.5+
 import json
 import selenium
+import socket
 import unittest
 import urllib2
 from datetime import datetime
@@ -53,8 +54,8 @@ class TestBadResources(unittest.TestCase):
     self.status=status
     self.resource=resource
   def runTest(self):
-    self.assertEqual(int(self.status),
-                     200,
+    self.assertEqual(str(self.status),
+                     "200",
                      msg="\n\nOn page: %(page)s\nResource: %(resource)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
                          'resource': self.resource,
@@ -70,8 +71,8 @@ class TestBadLinks(unittest.TestCase):
     self.status=status
     self.link=link
   def runTest(self):
-    self.assertEqual(int(self.status),
-                     200,
+    self.assertEqual(str(self.status),
+                     "200",
                      msg="\n\nOn page: %(page)s\nBad Link: %(link)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
                          'link': self.link,
@@ -99,11 +100,10 @@ def resource_status_codes_suite():
     Test Suite 2
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
   """
-  from socket import error
   try:
     sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
     sel.start('captureNetworkTraffic=true')
-  except error,e:
+  except socket.error,e:
     print >> stderr, "Could not open connection to Selenium.  Did you start it?"
     exit(1)
   suite = unittest.TestSuite()
@@ -128,7 +128,6 @@ def link_status_codes_suite():
     Test Suite 3
     This suite loads every link reference on every page and checks for bad links in the HTML.  These are inline href <a> links in a page.
   """
-  from socket import error
   #good tested and bad_tested links are so the program
   #can skip links rather than double test
   #link is the key, http status code is the value
@@ -142,12 +141,30 @@ def link_status_codes_suite():
           suite.addTest(TestBadResources(page,linked_page,tested_links[linked_page]))
         else:
           try:
-            result=urllib2.urlopen(linked_page)
-          except urllib2.HTTPError,result:
+            request=urllib2.Request(linked_page)
+            request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0')
+            opener=urllib2.build_opener()
+            result=opener.open(request)
+            suite.addTest(TestBadResources(page,linked_page,result.getcode()))
+            tested_links[linked_page]=result.getcode()
+          except urllib2.HTTPError,e:
             #HTTPError has a getcode() function
-            pass
-          suite.addTest(TestBadResources(page,linked_page,result.getcode()))
-          tested_links[linked_page]=result.getcode()
+            suite.addTest(TestBadResources(page,linked_page,e.getcode()))
+            tested_links[linked_page]=e.getcode()
+          except Exception,e:
+            if hasattr(e, 'message') and len(e.message) > 0:
+              suite.addTest(TestBadResources(page,linked_page,e.message))
+              tested_links[linked_page]=e.message
+            elif hasattr(e, 'msg') and len(e.msg) > 0:
+              suite.addTest(TestBadResources(page,linked_page,e.msg))
+              tested_links[linked_page]=e.msg
+            elif hasattr(e, 'reason') and type(socket.gaierror) == type(e.reason):
+              suite.addTest(TestBadResources(page,linked_page,e.reason[0]+": "+e.reason[1]))
+              tested_links[linked_page]=e.reason
+            else:
+              suite.addTest(TestBadResources(page,linked_page,"Exception occurred without a good error message.  Submit issue with URL for troubleshooting."))
+              tested_links[linked_page]="Exception occurred without a good error message.  Submit issue with URL for troubleshooting."
+          result.close()
   return suite
 
 def crawl():
