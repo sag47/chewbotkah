@@ -66,7 +66,7 @@ class TestBadLinks(unittest.TestCase):
     Test function part of test suite 3
   """
   def __init__(self,page,link,status):
-    super(TestBadResources,self).__init__()
+    super(TestBadLinks,self).__init__()
     self.page=page
     self.status=status
     self.link=link
@@ -167,10 +167,10 @@ def link_status_codes_suite():
       if linked_page[0:4] == 'http':
         if linked_page in tested_links.keys():
           #if the URL has already been tested then skip testing and give the status
-          suite.addTest(TestBadResources(page,linked_page,tested_links[linked_page]))
+          suite.addTest(TestBadLinks(page,linked_page,tested_links[linked_page]))
         else:
           result=get_link_status(linked_page)
-          suite.addTest(TestBadResources(page,linked_page,result))
+          suite.addTest(TestBadLinks(page,linked_page,result))
           tested_links[linked_page]=result
   return suite
 
