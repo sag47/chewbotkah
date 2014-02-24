@@ -9,6 +9,7 @@ import selenium
 import socket
 import unittest
 import urllib2
+from cookielib import CookieJar
 from datetime import datetime
 from optparse import OptionParser
 from os.path import isfile
@@ -130,7 +131,9 @@ def get_link_status(url):
   try:
     request=urllib2.Request(url)
     request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0')
-    opener=urllib2.build_opener()
+    request.add_header('Host',url.split('/')[2])
+    cj=CookieJar()
+    opener=urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
     result=opener.open(request)
     result.close()
     return str(result.getcode())
