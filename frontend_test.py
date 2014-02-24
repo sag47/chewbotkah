@@ -148,7 +148,7 @@ def get_link_status(url):
     elif hasattr(e, 'reason') and type(socket.gaierror) == type(e.reason):
       return str(e.reason[0]+": "+e.reason[1])
     else:
-      return "Exception occurred without a good error message.  Submit issue with URL for troubleshooting."
+      return "Exception occurred without a good error message.  Manually check the URL to see the status.  If it is believed this URL is 100% good then file a issue for a potential bug."
 
 def link_status_codes_suite():
   """
