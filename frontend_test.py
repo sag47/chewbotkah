@@ -123,6 +123,30 @@ def resource_status_codes_suite():
           suite.addTest(TestBadResources(page,resource,status))
   return suite
 
+def get_link_status(url):
+  """
+    Gets the HTTP status of the url or returns an error associated with it.  Always returns a string.
+  """
+  try:
+    request=urllib2.Request(url)
+    request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0')
+    opener=urllib2.build_opener()
+    result=opener.open(request)
+    result.close()
+    return str(result.getcode())
+  except urllib2.HTTPError,e:
+    #HTTPError has a getcode() function
+    return str(e.getcode())
+  except Exception,e:
+    if hasattr(e, 'message') and len(e.message) > 0:
+      return str(e.message)
+    elif hasattr(e, 'msg') and len(e.msg) > 0:
+      return str(e.msg)
+    elif hasattr(e, 'reason') and type(socket.gaierror) == type(e.reason):
+      return str(e.reason[0]+": "+e.reason[1])
+    else:
+      return "Exception occurred without a good error message.  Submit issue with URL for troubleshooting."
+
 def link_status_codes_suite():
   """
     Test Suite 3
@@ -134,37 +158,20 @@ def link_status_codes_suite():
   tested_links={}
   suite = unittest.TestSuite()
   for page in pages.keys():
+    if not page in tested_links:
+      tested_links[page]=get_link_status(page)
+    if not tested_links[page] == "200":
+      #don't bother testing links on a non-200 status page
+      continue
     for linked_page in pages[page]:
       if linked_page[0:4] == 'http':
         if linked_page in tested_links.keys():
           #if the URL has already been tested then skip testing and give the status
           suite.addTest(TestBadResources(page,linked_page,tested_links[linked_page]))
         else:
-          try:
-            request=urllib2.Request(linked_page)
-            request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0')
-            opener=urllib2.build_opener()
-            result=opener.open(request)
-            suite.addTest(TestBadResources(page,linked_page,result.getcode()))
-            tested_links[linked_page]=result.getcode()
-          except urllib2.HTTPError,e:
-            #HTTPError has a getcode() function
-            suite.addTest(TestBadResources(page,linked_page,e.getcode()))
-            tested_links[linked_page]=e.getcode()
-          except Exception,e:
-            if hasattr(e, 'message') and len(e.message) > 0:
-              suite.addTest(TestBadResources(page,linked_page,e.message))
-              tested_links[linked_page]=e.message
-            elif hasattr(e, 'msg') and len(e.msg) > 0:
-              suite.addTest(TestBadResources(page,linked_page,e.msg))
-              tested_links[linked_page]=e.msg
-            elif hasattr(e, 'reason') and type(socket.gaierror) == type(e.reason):
-              suite.addTest(TestBadResources(page,linked_page,e.reason[0]+": "+e.reason[1]))
-              tested_links[linked_page]=e.reason
-            else:
-              suite.addTest(TestBadResources(page,linked_page,"Exception occurred without a good error message.  Submit issue with URL for troubleshooting."))
-              tested_links[linked_page]="Exception occurred without a good error message.  Submit issue with URL for troubleshooting."
-          result.close()
+          result=get_link_status(linked_page)
+          suite.addTest(TestBadResources(page,linked_page,result))
+          tested_links[linked_page]=result
   return suite
 
 def crawl():
