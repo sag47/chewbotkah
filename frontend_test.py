@@ -162,6 +162,8 @@ def link_status_codes_suite():
   suite = unittest.TestSuite()
   for page in pages.keys():
     if not page in tested_links:
+      if delay != 0:
+        sleep(delay)
       tested_links[page]=get_link_status(page)
     if not tested_links[page] == "200":
       #don't bother testing links on a non-200 status page
@@ -172,6 +174,8 @@ def link_status_codes_suite():
           #if the URL has already been tested then skip testing and give the status
           suite.addTest(TestBadLinks(page,linked_page,tested_links[linked_page]))
         else:
+          if delay != 0:
+            sleep(delay)
           result=get_link_status(linked_page)
           suite.addTest(TestBadLinks(page,linked_page,result))
           tested_links[linked_page]=result
