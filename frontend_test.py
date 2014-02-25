@@ -102,6 +102,7 @@ def resource_status_codes_suite():
     Test Suite 2
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
   """
+  global tested_links
   try:
     sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
     sel.start('captureNetworkTraffic=true')
@@ -110,6 +111,9 @@ def resource_status_codes_suite():
     exit(1)
   suite = unittest.TestSuite()
   for page in pages.keys():
+    if not '2' in skip_suites and not tested_links[page] == "200":
+      #don't bother testing resources on a non-200 status page
+      continue
     sel.open(page)
     #wait for javascript to potentially execute
     if delay != 0:
