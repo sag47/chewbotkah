@@ -30,8 +30,8 @@ Currently there are only two stages.
 The testing stages are organized into Suites.  Currently there are only 3 suites.
 
 * Suite 1 - This suite analyzes crawler data and checks for links that are not approved through whitelist or do not match the `--domain-filter`.  This operates on the `href` attribute of `<a>` element in the scrape data.  This does not actually perform any network requests but uses the crawl data.
-* Suite 2 - This suite profiles the loading of each page on the domain from crawler data and determins if there are any non-200 HTTP status resources loading on each page.  This only tests the crawler indexes and does not check links within pages.
-* Suite 3 - This suite loads every hyperlink reference on every page and checks for bad links in the HTML.  This test may go off site to test a link.
+* Suite 2 - This suite loads every hyperlink reference on every page and checks for bad links in the HTML.  This test may go off site to test a link.
+* Suite 3 - This suite profiles the loading of each page on the domain from crawler data and determins if there are any non-200 HTTP status resources loading on each page.  This only tests the crawler indexes and does not check links within pages.
 
 ## Program Options
 
