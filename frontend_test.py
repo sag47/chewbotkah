@@ -28,6 +28,7 @@ href_whitelist=['']
 delay=0.0
 skip_suites=[]
 crawler_excludes='.exe,.dmg'
+tested_links={}
 
 class TestWrongUrls(unittest.TestCase):
   """
@@ -158,7 +159,7 @@ def link_status_codes_suite():
   #good tested and bad_tested links are so the program
   #can skip links rather than double test
   #link is the key, http status code is the value
-  tested_links={}
+  global tested_links
   suite = unittest.TestSuite()
   for page in pages.keys():
     if not page in tested_links:
@@ -296,15 +297,10 @@ Examples:
   #start of suite 2
   if not '2' in skip_suites:
     print >> stderr, "\n"+"#"*70
-    print >> stderr, "Running Test Suite 2: Checking HTTP status codes of all site resources."
+    print >> stderr, "Running Test Suite 2: Checking HTTP status codes of all inline links."
     if not delay == 0:
       print >> stderr, "Request delay: %f" % delay
-    try:
-      result=unittest.TextTestRunner(verbosity=0).run(resource_status_codes_suite())
-    except Exception,e:
-      print >> stderr, "Exception Encountered: %s" % e.message
-      print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
-      exit(1)
+    result=unittest.TextTestRunner(verbosity=0).run(link_status_codes_suite())
     total+=result.testsRun
     failures+=len(result.failures)
     if not result.wasSuccessful():
@@ -314,10 +310,15 @@ Examples:
   #start of suite 3
   if not '3' in skip_suites:
     print >> stderr, "\n"+"#"*70
-    print >> stderr, "Running Test Suite 3: Checking HTTP status codes of all inline links."
+    print >> stderr, "Running Test Suite 3: Checking HTTP status codes of all site resources."
     if not delay == 0:
       print >> stderr, "Request delay: %f" % delay
-    result=unittest.TextTestRunner(verbosity=0).run(link_status_codes_suite())
+    try:
+      result=unittest.TextTestRunner(verbosity=0).run(resource_status_codes_suite())
+    except Exception,e:
+      print >> stderr, "Exception Encountered: %s" % e.message
+      print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
+      exit(1)
     total+=result.testsRun
     failures+=len(result.failures)
     if not result.wasSuccessful():
