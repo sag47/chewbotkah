@@ -227,6 +227,7 @@ Examples:
   parser.add_option('--save-crawl',dest="save_crawl", help="Save your crawl data to a JSON formatted file.", metavar="FILE")
   parser.add_option('--load-crawl',dest="load_crawl", help="Load JSON formatted crawl data instead of crawling.", metavar="FILE")
   parser.add_option('--crawler-excludes',dest="crawler_excludes", help="Comma separated word list.  If word is in URL then the crawler won't attempt to crawl it.", metavar="LIST")
+  parser.add_option('--preseed',dest="preseed", help="JSON formatted file with a default list of links and status to override for testing.", metavar="FILE")
   parser.set_defaults(domain_filter=domain_filter,
                       start_url=start_url,
                       href_whitelist=','.join(href_whitelist),
@@ -234,7 +235,8 @@ Examples:
                       skip_suites=','.join(skip_suites),
                       save_crawl='',
                       load_crawl='',
-                      crawler_excludes=crawler_excludes)
+                      crawler_excludes=crawler_excludes,
+                      preseed="")
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
@@ -243,6 +245,9 @@ Examples:
     exit(1)
   if len(options.load_crawl) > 0 and not isfile(options.load_crawl):
     print >> stderr, "Crawl file does not exist!"
+    exit(1)
+  if len(options.preseed) > 0 and not isfile(options.preseed):
+    print >> stderr, "Preseed file does not exist."
     exit(1)
   start_url=options.start_url
   if not options.start_url == 'http://example.com/' and options.domain_filter == 'example.com':
@@ -261,6 +266,14 @@ Examples:
 
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
+  if len(options.preseed):
+    try:
+      print >> stderr, "Preseeding results."
+      with open(options.preseed,'r') as f:
+        tested_links=json.load(f)
+    except Exception,e:
+      print >> stderr, "Not a valid crawl data file!  Aborting."
+      exit(1)
   if len(options.load_crawl) == 0:
     print >> stderr, "Target: %s" % start_url
     print >> stderr, "Domain Filter: %s" % domain_filter
@@ -273,17 +286,15 @@ Examples:
     if len(options.save_crawl) > 0:
       print >> stderr, "Saving crawl data: %s" % options.save_crawl
       try:
-        f=open(options.save_crawl,'w')
-        json.dump(pages,f)
-        f.close()
+        with open(options.save_crawl,'w') as f:
+          json.dump(pages,f)
       except Exception,e:
         print >> stderr, "Error: %s" % e.message
   else:
     print >> stderr, "Load crawl data: %s" % options.load_crawl
     try:
-      f=open(options.load_crawl,'r')
-      pages=json.load(f)
-      f.close()
+      with open(options.load_crawl,'r') as f:
+        pages=json.load(f)
     except Exception,e:
       print >> stderr, "Not a valid crawl data file!  Aborting."
       exit(1)
