@@ -245,7 +245,10 @@ Examples:
     print >> stderr, "Crawl file does not exist!"
     exit(1)
   start_url=options.start_url
-  domain_filter=options.domain_filter
+  if not options.start_url == 'http://example.com/' and options.domain_filter == 'example.com':
+    domain_filter=options.start_url.split('/')[2]
+  else:
+    domain_filter=options.domain_filter
   href_whitelist=options.href_whitelist.strip().split(',')
   crawler_excludes=options.crawler_excludes
   delay=float(options.delay)
