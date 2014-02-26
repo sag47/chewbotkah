@@ -46,26 +46,9 @@ class TestWrongUrls(unittest.TestCase):
                       'page': self.page,
                       'link': self.link})
 
-class TestBadResources(unittest.TestCase):
-  """
-    Test function part of test suite 2
-  """
-  def __init__(self,page,resource,status):
-    super(TestBadResources,self).__init__()
-    self.page=page
-    self.status=status
-    self.resource=resource
-  def runTest(self):
-    self.assertEqual(str(self.status),
-                     "200",
-                     msg="\n\nOn page: %(page)s\nResource: %(resource)s\nReturned HTTP Status: %(status)s" % {
-                         'page': self.page,
-                         'resource': self.resource,
-                         'status': self.status})
-
 class TestBadLinks(unittest.TestCase):
   """
-    Test function part of test suite 3
+    Test function part of test suite 2
   """
   def __init__(self,page,link,status):
     super(TestBadLinks,self).__init__()
@@ -78,6 +61,23 @@ class TestBadLinks(unittest.TestCase):
                      msg="\n\nOn page: %(page)s\nBad Link: %(link)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
                          'link': self.link,
+                         'status': self.status})
+
+class TestBadResources(unittest.TestCase):
+  """
+    Test function part of test suite 3
+  """
+  def __init__(self,page,resource,status):
+    super(TestBadResources,self).__init__()
+    self.page=page
+    self.status=status
+    self.resource=resource
+  def runTest(self):
+    self.assertEqual(str(self.status),
+                     "200",
+                     msg="\n\nOn page: %(page)s\nResource: %(resource)s\nReturned HTTP Status: %(status)s" % {
+                         'page': self.page,
+                         'resource': self.resource,
                          'status': self.status})
 
 def href_suite():
@@ -99,7 +99,7 @@ def href_suite():
 
 def resource_status_codes_suite():
   """
-    Test Suite 2
+    Test Suite 3
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
   """
   global tested_links
@@ -157,7 +157,7 @@ def get_link_status(url):
 
 def link_status_codes_suite():
   """
-    Test Suite 3
+    Test Suite 2
     This suite loads every link reference on every page and checks for bad links in the HTML.  These are inline href <a> links in a page.
   """
   #good tested and bad_tested links are so the program
