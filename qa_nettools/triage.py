@@ -130,6 +130,34 @@ class triage():
              "Issues are triaged into three categories: High, Medium, Low.  Each issue is in the form of a link to the page that contains the issue followed by a bullet point list of issues discovered on that page.  There may be an analysis section at the end of this document which might be worth checking out before viewing prioritized issues.  For a description of the HTTP status codes contained in this document please see [rfc2616.10](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html).",
              ""]
     #Prioritized items
-    if len(self._high) > 0:
-      pass
+    if len(self._high) > 0 or len(self._medium) > 0 or len(self._low) > 0:
+      report+=["# Priorities",""]
+      if len(self._high) > 0:
+        report+=["### High Priority",""]
+        for page in self._high:
+          report+=[page,""]
+          for resource,status in self._pages[page].resources:
+            report+=["* Bad Resource: %s returned HTTP status `%s`" % (resource,status)]
+          for link,status in self._pages[page].links:
+            report+=["* Bad HREF Link: %s returned HTTP status `%s`" % (link,status)]
+          report+=[""]
+      if len(self._medium) > 0:
+        report+=["### Medium Priority",""]
+        for page in self._medium:
+          report+=[page,""]
+          for resource,status in self._pages[page].resources:
+            report+=["* Bad Resource: %s returned HTTP status `%s`" % (resource,status)]
+          for link,status in self._pages[page].links:
+            report+=["* Bad HREF Link: %s returned HTTP status `%s`" % (link,status)]
+          report+=[""]
+      if len(self._low) > 0:
+        report+=["### Low Priority",""]
+        for page in self._low:
+          report+=[page,""]
+          for resource,status in self._pages[page].resources:
+            report+=["* Bad Resource: %s returned HTTP status `%s`" % (resource,status)]
+          for link,status in self._pages[page].links:
+            report+=["* Bad HREF Link: %s returned HTTP status `%s`" % (link,status)]
+          report+=[""]
+    #Analysis section
     return '\n'.join(report)
