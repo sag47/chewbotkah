@@ -64,23 +64,20 @@ class triage():
   _link_count={}
   def __init__(self):
     pass
-  def set_summary(self,total_tests=0,failed_tests=0,runtime="0s"):
-    """
-      Sets summary information to be displayed in the report.
-    """
-    self._total_tests=total_tests
-    self._failed_tests=failed_tests
-    self._runtime=runtime
   def add_link(self,page,ref,status):
     """
       Adds a tested link on a page for the final report.
+      Arguments:
+        page - string - a parent page
+        ref - string - a reference located on parent page
+        status - string - HTTP status of the reference
     """
     #analysis logic
     if not self._found404 and status == "404":
       self._found404=True
     if not self._found401 and status == "401":
       self._found401=True
-    if not self._found30x and if re.match(r'^30[0-7]$',status):
+    if not self._found30x and re.match(r'^30[0-7]$',status):
       self._found30x=True
     if not page in self._pages.keys():
       self._pages[page]=Page()
@@ -91,13 +88,17 @@ class triage():
   def add_resource(self,page,ref,status):
     """
       Adds a tested resource on a page for the final report.
+      Arguments:
+        page - string - a parent page
+        ref - string - a reference located on parent page
+        status - string - HTTP status of the reference
     """
     #analysis logic
     if not self._found404 and status == "404":
       self._found404=True
     if not self._found401 and status == "401":
       self._found401=True
-    if not self._found30x and if re.match(r'^30[0-7]$',status):
+    if not self._found30x and re.match(r'^30[0-7]$',status):
       self._found30x=True
     if not page in self._pages.keys():
       self._pages[page]=Page()
@@ -107,7 +108,17 @@ class triage():
     if not self._included_resource and self._resource_count[ref] >= 5:
       self._included_resource=True
     self._pages[page].add_resource(ref=ref,status=status)
+  def set_summary(self,total_tests=0,failed_tests=0,runtime="0s"):
+    """
+      Sets summary information to be displayed in the report.  This should be one of the last functions to run before report.
+    """
+    self._total_tests=total_tests
+    self._failed_tests=failed_tests
+    self._runtime=runtime
   def triage_items(self):
+    """
+      Internally categorize all items.  This should be one of the last functions to run before report.
+    """
     #categorize all pages
     for page in self._pages.keys():
       if self._pages[page].highpriority:
@@ -116,9 +127,11 @@ class triage():
         self._medium.append(page)
       else:
         self._low.append(page)
-  def report(self):
+  def report(self,tested_links):
     """
       Generate a final report in markdown format.
+      Arguments:
+        tested_links - dictionary - a dictionary of links and status codes
     """
     #Report Summary
     report=["# Summary",""]
@@ -177,8 +190,14 @@ class triage():
                "",
                "The following resources have more than 5 references. They probably exist in a template or include file rather than on the page itself. If they aren't then perhaps consider treating them that way.",
                ""]
-      for x in sorted(self._resource_count,key=self._resource_count.get,reverse=True):
-        if self._resource_count[x] < 5:
+      for resource in sorted(self._resource_count,key=self._resource_count.get,reverse=True):
+        if self._resource_count[resource] < 5:
           break
-        report+=["%s - found `%d` references to bad resource." % (x,self._resource_count[x])]
+        report+=["%s - found `%d` references to bad resource." % (x,self._resource_count[resource])]
+    report+=["### Top 50 referenced links",
+             "",
+             "Here's the top 50 or less referenced links no matter what page they're on.  If a developer or client knows the links are correct then perhaps preseed values for the next [`frontend_qa`](https://github.com/sag47/frontend_qa) run.",
+             ""]
+    for link in sorted(self._link_count,key=self._link_count.get,reverse=True):
+      report+=["* {link} - returned HTTP status `{status}` is referenced `{count}` times.".format(link=link,status=tested_links[link],count=self._link_count[link])]
     return '\n'.join(report)
