@@ -60,6 +60,8 @@ class triage():
   _found404=False
   _found401=False
   _found30x=False
+  _resource_count={}
+  _link_count={}
   def __init__(self):
     pass
   def set_summary(self,total_tests=0,failed_tests=0,runtime="0s"):
@@ -75,6 +77,9 @@ class triage():
       self._found30x=True
     if not page in self._pages.keys():
       self._pages[page]=Page()
+    if not ref in self._link_count.keys():
+      self._link_count[ref]=0
+    self._link_count[ref]+=1
     self._pages[page].add_link(ref=ref,status=status)
   def add_resource(self,page,ref,status):
     if not self._found404 and status == "404":
@@ -85,6 +90,9 @@ class triage():
       self._found30x=True
     if not page in self._pages.keys():
       self._pages[page]=Page()
+    if not ref in self._resource_count.keys():
+      self._resource_count[ref]=0
+    self._resource_count[ref]+=1
     self._pages[page].add_resource(ref=ref,status=status)
   def report(self):
     #Report Summary
