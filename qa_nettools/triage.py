@@ -59,15 +59,10 @@ class triage():
   _found404=False
   _found401=False
   _found30x=False
+  _included_resource=False
   _resource_count={}
   _link_count={}
   def __init__(self):
-    pass
-  def _sort_dict(self,obj):
-    """
-      Sort a dictionary of integers based on the value of each key.
-      Sort from greatest to least.
-    """
     pass
   def set_summary(self,total_tests=0,failed_tests=0,runtime="0s"):
     """
@@ -107,7 +102,18 @@ class triage():
     if not ref in self._resource_count.keys():
       self._resource_count[ref]=0
     self._resource_count[ref]+=1
+    if not self._included_resource and self._resource_count[ref] >= 5:
+      self._included_resource=True
     self._pages[page].add_resource(ref=ref,status=status)
+  def triage_items(self):
+    #categorize all pages
+    for page in self._pages.keys():
+      if self._pages[page].highpriority:
+        self._high.append(page)
+      elif self._pages[page].mediumpriority:
+        self._medium.append(page)
+      else:
+        self._low.append(page)
   def report(self):
     """
       Generate a final report in markdown format.
@@ -124,4 +130,6 @@ class triage():
              "Issues are triaged into three categories: High, Medium, Low.  Each issue is in the form of a link to the page that contains the issue followed by a bullet point list of issues discovered on that page.  There may be an analysis section at the end of this document which might be worth checking out before viewing prioritized issues.  For a description of the HTTP status codes contained in this document please see [rfc2616.10](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html).",
              ""]
     #Prioritized items
+    if len(self._high) > 0:
+      pass
     return '\n'.join(report)
