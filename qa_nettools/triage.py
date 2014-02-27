@@ -28,7 +28,6 @@ class Page():
       self.highpriority=True
     #append the resource and status
     self.resources.append((ref,status))
-
   def add_link(self,ref,status):
     #triage the link
     if not self.highpriority and status == "404":
@@ -64,11 +63,23 @@ class triage():
   _link_count={}
   def __init__(self):
     pass
+  def _sort_dict(self,obj):
+    """
+      Sort a dictionary of integers based on the value of each key.
+      Sort from greatest to least.
+    """
+    pass
   def set_summary(self,total_tests=0,failed_tests=0,runtime="0s"):
+    """
+      Sets summary information to be displayed in the report.
+    """
     self._total_tests=total_tests
     self._failed_tests=failed_tests
     self._runtime=runtime
   def add_link(self,page,ref,status):
+    """
+      Adds a tested link on a page for the final report.
+    """
     if not self._found404 and status == "404":
       self._found404=True
     elif not self._found401 and status == "401":
@@ -82,6 +93,9 @@ class triage():
     self._link_count[ref]+=1
     self._pages[page].add_link(ref=ref,status=status)
   def add_resource(self,page,ref,status):
+    """
+      Adds a tested resource on a page for the final report.
+    """
     if not self._found404 and status == "404":
       self._found404=True
     elif not self._found401 and status == "401":
@@ -95,6 +109,9 @@ class triage():
     self._resource_count[ref]+=1
     self._pages[page].add_resource(ref=ref,status=status)
   def report(self):
+    """
+      Generate a final report in markdown format.
+    """
     #Report Summary
     report=["# Summary",""]
     report+=["Unit tests",
