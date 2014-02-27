@@ -75,11 +75,12 @@ class triage():
     """
       Adds a tested link on a page for the final report.
     """
+    #analysis logic
     if not self._found404 and status == "404":
       self._found404=True
-    elif not self._found401 and status == "401":
+    if not self._found401 and status == "401":
       self._found401=True
-    elif not self._found30x and if re.match(r'^30[0-7]$',status):
+    if not self._found30x and if re.match(r'^30[0-7]$',status):
       self._found30x=True
     if not page in self._pages.keys():
       self._pages[page]=Page()
@@ -91,11 +92,12 @@ class triage():
     """
       Adds a tested resource on a page for the final report.
     """
+    #analysis logic
     if not self._found404 and status == "404":
       self._found404=True
-    elif not self._found401 and status == "401":
+    if not self._found401 and status == "401":
       self._found401=True
-    elif not self._found30x and if re.match(r'^30[0-7]$',status):
+    if not self._found30x and if re.match(r'^30[0-7]$',status):
       self._found30x=True
     if not page in self._pages.keys():
       self._pages[page]=Page()
