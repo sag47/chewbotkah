@@ -5,6 +5,7 @@
 #Linux 3.11.0-12-generic x86_64
 #Python 2.7.5+
 import json
+import qa_nettools
 import selenium
 import socket
 import unittest
@@ -13,7 +14,6 @@ from cookielib import CookieJar
 from datetime import datetime
 from optparse import OptionParser
 from os.path import isfile
-from qa_nettools import NetworkCapture
 from re import match
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -121,7 +121,7 @@ def resource_status_codes_suite():
     raw_xml = sel.captureNetworkTraffic('xml')
     traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
     #network traffic details
-    nc = NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
+    nc = qa_nettools.NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
     http_details = nc.get_http_details()
     for status,method,resource,size,time in http_details:
       if method == 'GET':
@@ -190,7 +190,6 @@ def crawl():
   """
     The crawl function calls a crawler to gather data about a website which can be used by other test suites.
   """
-  from qa_nettools import crawler
   global pages
   try:
     driver=webdriver.Remote(command_executor='http://127.0.0.1:4444/wd/hub',desired_capabilities=DesiredCapabilities.FIREFOX)
@@ -199,7 +198,7 @@ def crawl():
     exit(1)
   if not delay == 0:
     print >> stderr, "Crawler request delay: %f seconds" % delay
-  crawler=crawler(driver,domain_filter=domain_filter,delay=delay,excludes=crawler_excludes)
+  crawler=qa_nettools.crawler(driver,domain_filter=domain_filter,delay=delay,excludes=crawler_excludes)
   pages=crawler.crawl(start_url)
   driver.quit
 
