@@ -162,4 +162,23 @@ class triage():
             report+=["* Bad HREF Link: %s returned HTTP status `%s`" % (link,status)]
           report+=[""]
     #Analysis section
+    report+=["# Analysis",""]
+    if self._found404 or self._found401 or self._found30x:
+      report+=["### Notes for status codes",""]
+      if self._found404:
+        report+=['* `404` "Not Found" links should be updated so they properly resolve. In the case of an archived item when the resource no longer exists it is best to remove the link but note that the link was removed.']
+      if self._found30x:
+        report+=['* `30x` "Redirect" links should be resolved in the HTML because it causes a noticeable performance hit on the client. Note that URL shorteners should be avoided if they\'re being used. URL shortening is better suited to social networks rather than websites.']
+      if self._found401:
+        report+=['* `401` "Unauthorized" links should be manually tested by logging in and verifying that the link is okay. These links may be forced into an "OK" state by preseeding the URLs.']
+      report+=[""]
+    if self._included_resource:
+      report+=["### Probably an included resource",
+               "",
+               "The following resources have more than 5 references. They probably exist in a template or include file rather than on the page itself. If they aren't then perhaps consider treating them that way.",
+               ""]
+      for x in sorted(self._resource_count,key=self._resource_count.get,reverse=True):
+        if self._resource_count[x] < 5:
+          break
+        report+=["%s - found `%d` references to bad resource." % (x,self._resource_count[x])]
     return '\n'.join(report)
