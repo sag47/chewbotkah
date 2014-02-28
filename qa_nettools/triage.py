@@ -154,6 +154,11 @@ class triage():
       report+=["* Request Delay: `%fs`" % self._request_delay]
     report+=["",
              "Issues are triaged into three categories: High, Medium, Low.  Each issue is in the form of a link to the page that contains the issue followed by a bullet point list of issues discovered on that page.  There may be an analysis section at the end of this document which might be worth checking out before viewing prioritized issues.  For a description of the HTTP status codes contained in this document please see [rfc2616.10](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html).",
+             "",
+             "### Definitions",
+             "",
+             "* `Bad Rresource` - A bad resource is an asset being loaded on a page.  Typically resources include CSS files, JavaScript files, images, or content loaded via AJAX.",
+             "* `Bad HREF Link` - A bad HREF link is an anchor link (`<a href=\"...`) located on a web page.  If you see the same link appearing more than once it means that there are multiple anchor link references on that page.",
              ""]
     #Prioritized items
     if len(self._high) > 0 or len(self._medium) > 0 or len(self._low) > 0:
@@ -199,9 +204,9 @@ class triage():
       if self._found404:
         report+=['* `404` "Not Found" links should be updated so they properly resolve. In the case of an archived item when the resource no longer exists it is best to remove the link but note that the link was removed.']
       if self._found30x:
-        report+=['* `30x` "Redirect" links should be resolved in the HTML because it causes a noticeable performance hit on the client. Note that URL shorteners should be avoided if they\'re being used. URL shortening is better suited to social networks rather than websites.']
+        report+=['* `30x` "Redirect" links should be resolved in the HTML because it causes a noticeable performance hit on the client. Note that URL shorteners should be avoided if they\'re being used. URL shortening is better suited to social networks rather than websites.  It is important to understand the difference between redirects existing on a server and redirects being referenced in HTML.  Redirects existing on a server for legacy URLs and user bookmarks is okay.  However, links on your website pointing to redirects is not okay.  For every redirect clicked on your website a user experiences a slowness of half a second on average.  By removing these redirects you are greatly improving the performance and responsiveness of the website.  Users always respond positively to increased performance especially when trying to convert users into customers.']
       if self._found401:
-        report+=['* `401` "Unauthorized" links should be manually tested by logging in and verifying that the link is okay. These links may be forced into an "OK" state by preseeding the URLs.']
+        report+=['* `401` "Unauthorized" links should be manually tested by logging in and verifying that the link is okay. These links may be forced into an "OK" state by preseeding the URLs.  The link tester does not log into these URLs so they can\'t be automatically verified.']
       report+=[""]
 
     #probably an included resource analysis
