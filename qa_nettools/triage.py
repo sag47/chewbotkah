@@ -211,7 +211,8 @@ class triage():
       for resource in sorted(self._resource_count,key=self._resource_count.get,reverse=True):
         if self._resource_count[resource] < 5:
           break
-        report+=["%s - found `%d` references to bad resource." % (resource,self._resource_count[resource])]
+        report+=["* %s - found `%d` references to bad resource." % (resource,self._resource_count[resource])]
+      report+=[""]
 
     #top 50 links analysis
     if len(self._link_count) > 0:
