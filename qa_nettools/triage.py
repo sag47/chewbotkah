@@ -166,6 +166,7 @@ class triage():
       #High priority
       if len(self._high) > 0:
         report+=["### High Priority",""]
+        report+=["There are `{count}` high priority pages.".format(count=len(self._high)),""]
         for page in self._high:
           report+=["[{page}]({page})".format(page=page),""]
           for resource,status in self._pages[page].resources:
@@ -176,6 +177,7 @@ class triage():
       #Medium priority
       if len(self._medium) > 0:
         report+=["### Medium Priority",""]
+        report+=["There are `{count}` medium priority pages.".format(count=len(self._medium)),""]
         for page in self._medium:
           report+=["[{page}]({page})".format(page=page),""]
           for resource,status in self._pages[page].resources:
@@ -186,6 +188,7 @@ class triage():
       #Low priority
       if len(self._low) > 0:
         report+=["### Low Priority",""]
+        report+=["There are `{count}` low priority pages.".format(count=len(self._low)),""]
         for page in self._low:
           report+=["[{page}]({page})".format(page=page),""]
           for resource,status in self._pages[page].resources:
