@@ -116,13 +116,14 @@ class triage():
         links - list - list of links
     """
     self._preseeded_links=links
-  def set_summary(self,total_tests=0,failed_tests=0,runtime="0s"):
+  def set_summary(self,total_tests=0,failed_tests=0,runtime="0s",request_delay=0.0):
     """
       Sets summary information to be displayed in the report.  This should be one of the last functions to run before report.
     """
     self._total_tests=total_tests
     self._failed_tests=failed_tests
     self._runtime=runtime
+    self._request_delay=request_delay
   def triage_items(self):
     """
       Internally categorize all items.  This should be one of the last functions to run before report.
@@ -148,8 +149,10 @@ class triage():
              "* Passed: `%d`" % (self._total_tests-self._failed_tests),
              "* Failed: `%d`" % self._failed_tests,
              "* Total: `%d`" % self._total_tests,
-             "* Run time: `%s`" % self._runtime,
-             "",
+             "* Run time: `%s`" % self._runtime]
+    if not self._request_delay == 0:
+      report+=["* Request Delay: `%fs`" % self._request_delay]
+    report+=["",
              "Issues are triaged into three categories: High, Medium, Low.  Each issue is in the form of a link to the page that contains the issue followed by a bullet point list of issues discovered on that page.  There may be an analysis section at the end of this document which might be worth checking out before viewing prioritized issues.  For a description of the HTTP status codes contained in this document please see [rfc2616.10](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html).",
              ""]
     #Prioritized items

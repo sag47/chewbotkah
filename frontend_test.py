@@ -118,7 +118,7 @@ def resource_status_codes_suite():
       continue
     sel.open(page)
     #wait for javascript to potentially execute
-    if delay != 0:
+    if not delay == 0:
       sleep(delay)
     raw_xml = sel.captureNetworkTraffic('xml')
     traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
@@ -172,7 +172,7 @@ def link_status_codes_suite():
   suite = unittest.TestSuite()
   for page in pages.keys():
     if not page in tested_links:
-      if delay != 0:
+      if not delay == 0:
         sleep(delay)
       tested_links[page]=get_link_status(page)
     if not tested_links[page] == "200":
@@ -184,7 +184,7 @@ def link_status_codes_suite():
           #if the URL has already been tested then skip testing and give the status
           suite.addTest(TestBadLinks(page,linked_page,tested_links[linked_page]))
         else:
-          if delay != 0:
+          if not delay == 0:
             sleep(delay)
           result=get_link_status(linked_page)
           suite.addTest(TestBadLinks(page,linked_page,result))
@@ -372,7 +372,7 @@ Examples:
   print >> stderr, "Elapsed time: %(runtime)s" % {'runtime':runtime}
   if len(options.triage_report) > 0:
     print >> stderr, "Generating triage report."
-    triage.set_summary(total_tests=total,failed_tests=failures,runtime=runtime)
+    triage.set_summary(total_tests=total,failed_tests=failures,runtime=runtime,request_delay=delay)
     triage.triage_items()
     with open(options.triage_report,'w') as f:
       f.write(triage.report(tested_links=tested_links))
