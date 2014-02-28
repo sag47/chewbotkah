@@ -57,9 +57,9 @@ def get_link_status(url):
              'Host':host
              }
     if https:
-      conn=httplib.HTTPSConnection(host=host,port=port,timeout=3)
+      conn=httplib.HTTPSConnection(host=host,port=port,timeout=10)
     else:
-      conn=httplib.HTTPConnection(host=host,port=port,timeout=3)
+      conn=httplib.HTTPConnection(host=host,port=port,timeout=10)
     conn.request(method="HEAD",url=path,headers=headers)
     response=str(conn.getresponse().status)
     conn.close()
