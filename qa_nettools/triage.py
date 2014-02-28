@@ -206,13 +206,19 @@ class triage():
              "",
              "Here's the top 50 or less referenced links no matter what page they're on.  If a developer or client knows the links are correct then perhaps preseed values for the next [`frontend_qa`](https://github.com/sag47/frontend_qa) run.",
              ""]
+    count=0
     for link in sorted(self._link_count,key=self._link_count.get,reverse=True):
+      if not count < 50:
+        break
       report+=["* {link} - returned HTTP status `{status}` is referenced `{count}` times.".format(link=link,status=tested_links[link],count=self._link_count[link])]
-    report+=["### Preseeded links",
-             "",
-             "The following links were preseeded. The links are assumed to be OK.",
-             "",
-             "```"]
-    report+=self._preseeded_links
-    report+=["```",""]
+      count+=1
+    report+=[""]
+    if len(self._preseeded_links) > 0:
+      report+=["### Preseeded links",
+               "",
+               "The following links were preseeded. The links are assumed to be OK.",
+               "",
+               "```"]
+      report+=self._preseeded_links
+      report+=["```",""]
     return '\n'.join(report)
