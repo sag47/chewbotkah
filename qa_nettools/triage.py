@@ -63,6 +63,7 @@ class triage():
   _resource_count={}
   _link_count={}
   _preseeded_links=[]
+  _analyzed=False
   def __init__(self):
     pass
   def add_link(self,page,ref,status):
@@ -155,36 +156,43 @@ class triage():
     #Prioritized items
     if len(self._high) > 0 or len(self._medium) > 0 or len(self._low) > 0:
       report+=["# Priorities",""]
+      #High priority
       if len(self._high) > 0:
         report+=["### High Priority",""]
         for page in self._high:
           report+=[page,""]
           for resource,status in self._pages[page].resources:
-            report+=["* Bad Resource: %s returned HTTP status `%s`" % (resource,status)]
+            report+=["* Bad Resource: %s - returned HTTP status `%s`" % (resource,status)]
           for link,status in self._pages[page].links:
-            report+=["* Bad HREF Link: %s returned HTTP status `%s`" % (link,status)]
+            report+=["* Bad HREF Link: %s - returned HTTP status `%s`" % (link,status)]
           report+=[""]
+      #Medium priority
       if len(self._medium) > 0:
         report+=["### Medium Priority",""]
         for page in self._medium:
           report+=[page,""]
           for resource,status in self._pages[page].resources:
-            report+=["* Bad Resource: %s returned HTTP status `%s`" % (resource,status)]
+            report+=["* Bad Resource: %s - returned HTTP status `%s`" % (resource,status)]
           for link,status in self._pages[page].links:
-            report+=["* Bad HREF Link: %s returned HTTP status `%s`" % (link,status)]
+            report+=["* Bad HREF Link: %s - returned HTTP status `%s`" % (link,status)]
           report+=[""]
+      #Low priority
       if len(self._low) > 0:
         report+=["### Low Priority",""]
         for page in self._low:
           report+=[page,""]
           for resource,status in self._pages[page].resources:
-            report+=["* Bad Resource: %s returned HTTP status `%s`" % (resource,status)]
+            report+=["* Bad Resource: %s - returned HTTP status `%s`" % (resource,status)]
           for link,status in self._pages[page].links:
-            report+=["* Bad HREF Link: %s returned HTTP status `%s`" % (link,status)]
+            report+=["* Bad HREF Link: %s - returned HTTP status `%s`" % (link,status)]
           report+=[""]
+
     #Analysis section
     report+=["# Analysis",""]
+
+    #analysis on HTTP status codes
     if self._found404 or self._found401 or self._found30x:
+      self._analyzed=True
       report+=["### Notes for status codes",""]
       if self._found404:
         report+=['* `404` "Not Found" links should be updated so they properly resolve. In the case of an archived item when the resource no longer exists it is best to remove the link but note that the link was removed.']
@@ -193,7 +201,10 @@ class triage():
       if self._found401:
         report+=['* `401` "Unauthorized" links should be manually tested by logging in and verifying that the link is okay. These links may be forced into an "OK" state by preseeding the URLs.']
       report+=[""]
+
+    #probably an included resource analysis
     if self._included_resource:
+      self._analyzed=True
       report+=["### Probably an included resource",
                "",
                "The following resources have more than 5 references. They probably exist in a template or include file rather than on the page itself. If they aren't then perhaps consider treating them that way.",
@@ -202,18 +213,25 @@ class triage():
         if self._resource_count[resource] < 5:
           break
         report+=["%s - found `%d` references to bad resource." % (x,self._resource_count[resource])]
-    report+=["### Top 50 referenced links",
-             "",
-             "Here's the top 50 or less referenced links no matter what page they're on.  If a developer or client knows the links are correct then perhaps preseed values for the next [`frontend_qa`](https://github.com/sag47/frontend_qa) run.",
-             ""]
-    count=0
-    for link in sorted(self._link_count,key=self._link_count.get,reverse=True):
-      if not count < 50:
-        break
-      report+=["* {link} - returned HTTP status `{status}` is referenced `{count}` times.".format(link=link,status=tested_links[link],count=self._link_count[link])]
-      count+=1
-    report+=[""]
+
+    #top 50 links analysis
+    if len(self._link_count) > 0:
+      self._analyzed=True
+      report+=["### Top 50 referenced links",
+               "",
+               "Here's the top 50 or less referenced links no matter what page they're on.  If a developer or client knows the links are correct then perhaps preseed values for the next [`frontend_qa`](https://github.com/sag47/frontend_qa) run.",
+               ""]
+      count=0
+      for link in sorted(self._link_count,key=self._link_count.get,reverse=True):
+        if not count < 50:
+          break
+        report+=["* {link} - returned HTTP status `{status}` is referenced `{count}` times.".format(link=link,status=tested_links[link],count=self._link_count[link])]
+        count+=1
+      report+=[""]
+
+    #preseeded links analysis
     if len(self._preseeded_links) > 0:
+      self._analyzed=True
       report+=["### Preseeded links",
                "",
                "The following links were preseeded. The links are assumed to be OK.",
@@ -221,4 +239,7 @@ class triage():
                "```"]
       report+=self._preseeded_links
       report+=["```",""]
+
+    if not self._analyzed:
+      report+=["No comment.",""]
     return '\n'.join(report)
