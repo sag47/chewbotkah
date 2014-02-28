@@ -1,7 +1,9 @@
 ## v0.1.3
 
+* `--triage-report` option added.
 * `--crawler-excludes` option added.
 * Major bugfix suite 3.  Previously it was not working.  Since I'm only concerned with HTTP status codes am using `urllib2` instead.
+* Bugfix skipping 301/302 resources
 
 ## v0.1.2
 
