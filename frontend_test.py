@@ -56,7 +56,7 @@ class TestBadLinks(unittest.TestCase):
     self.status=status
     self.link=link
   def runTest(self):
-    self.assertEqual(str(self.status),
+    self.assertEqual(self.status,
                      "200",
                      msg="\n\nOn page: %(page)s\nBad Link: %(link)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
@@ -73,7 +73,7 @@ class TestBadResources(unittest.TestCase):
     self.status=status
     self.resource=resource
   def runTest(self):
-    self.assertEqual(str(self.status),
+    self.assertEqual(self.status,
                      "200",
                      msg="\n\nOn page: %(page)s\nResource: %(resource)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
@@ -103,6 +103,8 @@ def resource_status_codes_suite():
     This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
   """
   global tested_links
+  global triage
+  global options
   try:
     sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
     sel.start('captureNetworkTraffic=true')
@@ -125,8 +127,9 @@ def resource_status_codes_suite():
     http_details = nc.get_http_details()
     for status,method,resource,size,time in http_details:
       if method == 'GET':
-        if not status == 301 and not status == 302:
-          suite.addTest(TestBadResources(page,resource,status))
+        suite.addTest(TestBadResources(page,resource,str(status)))
+        if len(options.triage_report) > 0 and not str(status) == "200":
+          triage.add_resource(page,resource,str(status))
   return suite
 
 def get_link_status(url):
@@ -164,6 +167,8 @@ def link_status_codes_suite():
   #can skip links rather than double test
   #link is the key, http status code is the value
   global tested_links
+  global triage
+  global options
   suite = unittest.TestSuite()
   for page in pages.keys():
     if not page in tested_links:
@@ -184,6 +189,8 @@ def link_status_codes_suite():
           result=get_link_status(linked_page)
           suite.addTest(TestBadLinks(page,linked_page,result))
           tested_links[linked_page]=result
+        if len(options.triage_report) > 0 and not tested_links[linked_page] == "200":
+          triage.add_link(page,linked_page,tested_links[linked_page])
   return suite
 
 def crawl():
@@ -227,6 +234,7 @@ Examples:
   parser.add_option('--load-crawl',dest="load_crawl", help="Load JSON formatted crawl data instead of crawling.", metavar="FILE")
   parser.add_option('--crawler-excludes',dest="crawler_excludes", help="Comma separated word list.  If word is in URL then the crawler won't attempt to crawl it.", metavar="LIST")
   parser.add_option('--preseed',dest="preseed", help="JSON formatted file with a default list of links and status to override for testing.", metavar="FILE")
+  parser.add_option('--triage-report',dest="triage_report", help="Generate a report with all errors triaged in a markdown format.", metavar="FILE")
   parser.set_defaults(domain_filter=domain_filter,
                       start_url=start_url,
                       href_whitelist=','.join(href_whitelist),
@@ -235,7 +243,8 @@ Examples:
                       save_crawl='',
                       load_crawl='',
                       crawler_excludes=crawler_excludes,
-                      preseed="")
+                      preseed="",
+                      triage_report="")
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
@@ -263,6 +272,8 @@ Examples:
     else:
       skip_suites.append(suite)
 
+  if len(options.triage_report) > 0:
+    triage=qa_nettools.triage()
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
   if len(options.preseed):
@@ -270,6 +281,8 @@ Examples:
       print >> stderr, "Preseeding results."
       with open(options.preseed,'r') as f:
         tested_links=json.load(f)
+      if len(options.triage_report) > 0:
+        triage.add_preseeded_links(tested_links.keys())
     except Exception,e:
       print >> stderr, "Not a valid crawl data file!  Aborting."
       exit(1)
@@ -330,12 +343,12 @@ Examples:
     print >> stderr, "Running Test Suite 3: Checking HTTP status codes of all site resources."
     if not delay == 0:
       print >> stderr, "Request delay: %f" % delay
-    try:
-      result=unittest.TextTestRunner(verbosity=0).run(resource_status_codes_suite())
-    except Exception,e:
-      print >> stderr, "Exception Encountered: %s" % e.message
-      print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
-      exit(1)
+    #try:
+    result=unittest.TextTestRunner(verbosity=0).run(resource_status_codes_suite())
+    #except Exception,e:
+    #  print >> stderr, "Exception Encountered: %s" % e.message
+    #  print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
+    #  exit(1)
     total+=result.testsRun
     failures+=len(result.failures)
     if not result.wasSuccessful():
@@ -353,7 +366,15 @@ Examples:
   secs=(endtime-starttime).seconds
   microsecs=(endtime-starttime).microseconds/1000000.0
   if mins > 0:
-    print >> stderr, "Elapsed time: %(mins)dm %(secs)ss" % {'mins': mins,'secs':secs-(mins*60)+microsecs}
+    runtime="%(mins)dm %(secs)ss" % {'mins': mins,'secs':secs-(mins*60)+microsecs}
   else:
-    print >> stderr, "Elapsed time: %(secs)ss" % {'secs':secs+microsecs}
+    runtime="%(secs)ss" % {'secs':secs+microsecs}
+  print >> stderr, "Elapsed time: %(runtime)s" % {'runtime':runtime}
+  if len(options.triage_report) > 0:
+    print >> stderr, "Generating triage report."
+    triage.set_summary(total_tests=total,failed_tests=failures,runtime=runtime)
+    triage.triage_items()
+    with open(options.triage_report,'w') as f:
+      f.write(triage.report(tested_links=tested_links))
+
   exit(STATUS)
