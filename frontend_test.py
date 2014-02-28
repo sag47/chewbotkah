@@ -308,7 +308,7 @@ Examples:
       if len(options.triage_report) > 0:
         triage.add_preseeded_links(tested_links.keys())
     except Exception,e:
-      print >> stderr, "Not a valid crawl data file!  Aborting."
+      print >> stderr, "Not a valid preseed data file!  Must be in JSON format.  Aborting."
       exit(1)
   if len(options.load_crawl) == 0:
     print >> stderr, "Target: %s" % start_url
@@ -332,7 +332,7 @@ Examples:
       with open(options.load_crawl,'r') as f:
         pages=json.load(f)
     except Exception,e:
-      print >> stderr, "Not a valid crawl data file!  Aborting."
+      print >> stderr, "Not a valid crawl data file!  Must be in JSON format.  Aborting."
       exit(1)
   #end of crawl stage
 
