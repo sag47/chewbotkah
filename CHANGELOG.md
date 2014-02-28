@@ -12,10 +12,10 @@
   * Performance optimization: Don't attempt to check a URL multiple times but instead store result in an index.  If it has already been checked then assume the status hasn't changed.
 * Bugfix optimize suite 3 (formerly suite 2) don't attempt to profile pages which don't have an HTTP 200 status code.
 * Link testing has been pulled into a separate function so it can be utilized by both test suite 2 and suite 3.  The following are bugfixes implemented in this function.
-  * Bugfix grabbing HTTP status codes is now more robust with exception handling.
+  * Performance optimization: New method using lower level `httplib` to grab http `HEAD` rather than the whole response using `urllib2`.
+  * Bugfix proper HTTP responses are obtained with the new `httplib` method.
   * Bugfix send spoofed `User-Agent` header for more successful tests.
   * Bugfix send HTTP `Host` header for virtual hosting servers.
-  * Bugfix implemented cookie handler to avoid infinite loop HTTP 301 errors.
 * Bugfix default domain filter updated based on target string when `--domain-filter` option is not specified.
 * Bugfix crawler not properly crawling URLs by stripping strings after `?` in the URL.  This was implemented in an earlier version and turns out to have been a mistake.
 
