@@ -30,6 +30,32 @@ skip_suites=[]
 crawler_excludes='.exe,.dmg'
 tested_links={}
 
+def get_link_status(url):
+  """
+    Gets the HTTP status of the url or returns an error associated with it.  Always returns a string.
+  """
+  try:
+    request=urllib2.Request(url)
+    request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0')
+    request.add_header('Host',url.split('/')[2])
+    cj=CookieJar()
+    opener=urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    result=opener.open(request)
+    result.close()
+    return str(result.getcode())
+  except urllib2.HTTPError,e:
+    #HTTPError has a getcode() function
+    return str(e.getcode())
+  except Exception,e:
+    if hasattr(e, 'message') and len(e.message) > 0:
+      return str(e.message)
+    elif hasattr(e, 'msg') and len(e.msg) > 0:
+      return str(e.msg)
+    elif hasattr(e, 'reason') and type(socket.gaierror) == type(e.reason):
+      return str(e.reason[0]+": "+e.reason[1])
+    else:
+      return "Exception occurred without a good error message.  Manually check the URL to see the status.  If it is believed this URL is 100% good then file a issue for a potential bug."
+
 class TestWrongUrls(unittest.TestCase):
   """
     Test function part of test suite 1
@@ -97,67 +123,6 @@ def href_suite():
         suite.addTest(TestWrongUrls(domain_filter,page,link))
   return suite
 
-def resource_status_codes_suite():
-  """
-    Test Suite 3
-    This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
-  """
-  global tested_links
-  global triage
-  global options
-  try:
-    sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
-    sel.start('captureNetworkTraffic=true')
-  except socket.error,e:
-    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
-    exit(1)
-  suite = unittest.TestSuite()
-  for page in pages.keys():
-    if not '2' in skip_suites and not tested_links[page] == "200":
-      #don't bother testing resources on a non-200 status page
-      continue
-    sel.open(page)
-    #wait for javascript to potentially execute
-    if not delay == 0:
-      sleep(delay)
-    raw_xml = sel.captureNetworkTraffic('xml')
-    traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
-    #network traffic details
-    nc = qa_nettools.NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
-    http_details = nc.get_http_details()
-    for status,method,resource,size,time in http_details:
-      if method == 'GET':
-        suite.addTest(TestBadResources(page,resource,str(status)))
-        if len(options.triage_report) > 0 and not str(status) == "200":
-          triage.add_resource(page,resource,str(status))
-  return suite
-
-def get_link_status(url):
-  """
-    Gets the HTTP status of the url or returns an error associated with it.  Always returns a string.
-  """
-  try:
-    request=urllib2.Request(url)
-    request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0')
-    request.add_header('Host',url.split('/')[2])
-    cj=CookieJar()
-    opener=urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    result=opener.open(request)
-    result.close()
-    return str(result.getcode())
-  except urllib2.HTTPError,e:
-    #HTTPError has a getcode() function
-    return str(e.getcode())
-  except Exception,e:
-    if hasattr(e, 'message') and len(e.message) > 0:
-      return str(e.message)
-    elif hasattr(e, 'msg') and len(e.msg) > 0:
-      return str(e.msg)
-    elif hasattr(e, 'reason') and type(socket.gaierror) == type(e.reason):
-      return str(e.reason[0]+": "+e.reason[1])
-    else:
-      return "Exception occurred without a good error message.  Manually check the URL to see the status.  If it is believed this URL is 100% good then file a issue for a potential bug."
-
 def link_status_codes_suite():
   """
     Test Suite 2
@@ -191,6 +156,43 @@ def link_status_codes_suite():
           tested_links[linked_page]=result
         if len(options.triage_report) > 0 and not tested_links[linked_page] == "200":
           triage.add_link(page,linked_page,tested_links[linked_page])
+  return suite
+
+def resource_status_codes_suite():
+  """
+    Test Suite 3
+    This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
+  """
+  global tested_links
+  global triage
+  global options
+  try:
+    sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
+    sel.start('captureNetworkTraffic=true')
+  except socket.error,e:
+    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
+    exit(1)
+  suite = unittest.TestSuite()
+  for page in pages.keys():
+    if not page in tested_links:
+      tested_links[page]=get_link_status(page)
+    if not tested_links[page] == "200":
+      #don't bother testing resources on a non-200 status page
+      continue
+    sel.open(page)
+    #wait for javascript to potentially execute
+    if not delay == 0:
+      sleep(delay)
+    raw_xml = sel.captureNetworkTraffic('xml')
+    traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
+    #network traffic details
+    nc = qa_nettools.NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
+    http_details = nc.get_http_details()
+    for status,method,resource,size,time in http_details:
+      if method == 'GET':
+        suite.addTest(TestBadResources(page,resource,str(status)))
+        if len(options.triage_report) > 0 and not str(status) == "200":
+          triage.add_resource(page,resource,str(status))
   return suite
 
 def crawl():
