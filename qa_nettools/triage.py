@@ -8,14 +8,13 @@
 import re
 
 class Page():
-  resource_count=0
-  resources=[]
-  link_count=0
-  highpriority=False
-  mediumpriority=False
-  links=[]
   def __init__(self):
-    pass
+    self.resource_count=0
+    self.resources=[]
+    self.link_count=0
+    self.highpriority=False
+    self.mediumpriority=False
+    self.links=[]
   def add_resource(self,ref,status):
     #triage the resource
     if not self.highpriority and status == "404":
@@ -51,21 +50,21 @@ class triage():
   """
   Triage report generator attempts to make sense of the QA results for the layman web developer.
   """
-  #priorities
-  _high=[]
-  _medium=[]
-  _low=[]
-  _pages={}
-  _found404=False
-  _found401=False
-  _found30x=False
-  _included_resource=False
-  _resource_count={}
-  _link_count={}
-  _preseeded_links=[]
-  _analyzed=False
   def __init__(self):
-    pass
+    #priorities
+    self._high=[]
+    self._medium=[]
+    self._low=[]
+    self._pages={}
+    #analysis variables
+    self._found404=False
+    self._found401=False
+    self._found30x=False
+    self._included_resource=False
+    self._analyzed=False
+    self._resource_count={}
+    self._link_count={}
+    self._preseeded_links=[]
   def add_link(self,page,ref,status):
     """
       Adds a tested link on a page for the final report.
