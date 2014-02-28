@@ -32,6 +32,7 @@ elif [ "$USER" = "root" ];then
   #markdown2html prereqs
   pip install markdown2
   pip install pygments
+  pip install quik
 
 
   # Download and copy the ChromeDriver to /usr/local/bin
