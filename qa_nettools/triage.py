@@ -23,7 +23,7 @@ class Page():
       self.mediumpriority=True
     #increment the resource count
     self.resource_count+=1
-    if (self.resource_count+self.link_count) >= 5:
+    if (self.resource_count+self.link_count) >= 100:
       self.highpriority=True
     #append the resource and status
     self.resources.append((ref,status))
@@ -35,7 +35,7 @@ class Page():
       self.mediumpriority=True
     #increment the resource count
     self.link_count+=1
-    if (self.resource_count+self.link_count) >= 5:
+    if (self.resource_count+self.link_count) >= 100:
       self.highpriority=True
     #append the resource and status
     self.links.append((ref,status))
