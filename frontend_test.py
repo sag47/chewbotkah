@@ -158,10 +158,10 @@ def link_status_codes_suite():
   global options
   suite = unittest.TestSuite()
   for page in pages.keys():
-    if not page in tested_links:
+    if not re.sub(r'(.*)#.*$',r'\1',page) in tested_links:
       if not delay == 0:
         sleep(delay)
-      tested_links[page]=get_link_status(page)
+      tested_links[re.sub(r'(.*)#.*$',r'\1',page)]=get_link_status(page)
     if not tested_links[page] == "200":
       #don't bother testing links on a non-200 status page
       continue
@@ -196,9 +196,9 @@ def resource_status_codes_suite():
     exit(1)
   suite = unittest.TestSuite()
   for page in pages.keys():
-    if not page in tested_links:
-      tested_links[page]=get_link_status(page)
-    if not tested_links[page] == "200":
+    if not re.sub(r'(.*)#.*$',r'\1',page) in tested_links:
+      tested_links[re.sub(r'(.*)#.*$',r'\1',page)]=get_link_status(page)
+    if not tested_links[re.sub(r'(.*)#.*$',r'\1',page)] == "200":
       #don't bother testing resources on a non-200 status page
       continue
     sel.open(page)
