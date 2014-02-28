@@ -4,6 +4,7 @@
 #Ubuntu 13.10
 #Linux 3.11.0-12-generic x86_64
 #Python 2.7.5+
+import httplib
 import json
 import qa_nettools
 import selenium
@@ -34,27 +35,47 @@ def get_link_status(url):
   """
     Gets the HTTP status of the url or returns an error associated with it.  Always returns a string.
   """
+  https=False
+  url=url.split('/',3)
+  if len(url) > 3:
+    path='/'+url[3]
+  else:
+    path='/'
+  if url[0] == 'http:':
+    port=80
+  elif url[0] == 'https:':
+    port=443
+    https=True
+  if ':' in url[2]:
+    host=url[2].split(':')[0]
+    port=url[2].split(':')[1]
+  else:
+    host=url[2]
   try:
-    request=urllib2.Request(url)
-    request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0')
-    request.add_header('Host',url.split('/')[2])
-    cj=CookieJar()
-    opener=urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    result=opener.open(request)
-    result.close()
-    return str(result.getcode())
-  except urllib2.HTTPError,e:
-    #HTTPError has a getcode() function
-    return str(e.getcode())
-  except Exception,e:
-    if hasattr(e, 'message') and len(e.message) > 0:
-      return str(e.message)
-    elif hasattr(e, 'msg') and len(e.msg) > 0:
-      return str(e.msg)
-    elif hasattr(e, 'reason') and type(socket.gaierror) == type(e.reason):
-      return str(e.reason[0]+": "+e.reason[1])
+    headers={'User-Agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0',
+             'Host':host
+             }
+    if https:
+      conn=httplib.HTTPSConnection(host=host,port=port,timeout=3)
     else:
-      return "Exception occurred without a good error message.  Manually check the URL to see the status.  If it is believed this URL is 100% good then file a issue for a potential bug."
+      conn=httplib.HTTPConnection(host=host,port=port,timeout=3)
+    conn.request(method="HEAD",url=path,headers=headers)
+    response=str(conn.getresponse().status)
+    conn.close()
+  except socket.gaierror,e:
+    response="Socket Error (%d): %s" % (e[0],e[1])
+  except StandardError,e:
+    if hasattr(e,'getcode') and len(e.getcode()) > 0:
+      response=str(e.getcode())
+    if hasattr(e, 'message') and len(e.message) > 0:
+      response=str(e.message)
+    elif hasattr(e, 'msg') and len(e.msg) > 0:
+      response=str(e.msg)
+    elif type('') == type(e):
+      response=e
+    else:
+      response="Exception occurred without a good error message.  Manually check the URL to see the status.  If it is believed this URL is 100% good then file a issue for a potential bug."
+  return response
 
 class TestWrongUrls(unittest.TestCase):
   """
