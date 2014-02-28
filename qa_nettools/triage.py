@@ -167,31 +167,31 @@ class triage():
       if len(self._high) > 0:
         report+=["### High Priority",""]
         for page in self._high:
-          report+=[page,""]
+          report+=["[{page}]({page})".format(page=page),""]
           for resource,status in self._pages[page].resources:
-            report+=["* Bad Resource: %s - returned HTTP status `%s`" % (resource,status)]
+            report+=["* Bad Resource: [{resource}]({resource}) - returned HTTP status `{status}`".format(resource=resource,status=status)]
           for link,status in self._pages[page].links:
-            report+=["* Bad HREF Link: %s - returned HTTP status `%s`" % (link,status)]
+            report+=["* Bad HREF Link: [{link}]({link}) - returned HTTP status `{status}`".format(link=link,status=status)]
           report+=[""]
       #Medium priority
       if len(self._medium) > 0:
         report+=["### Medium Priority",""]
         for page in self._medium:
-          report+=[page,""]
+          report+=["[{page}]({page})".format(page=page),""]
           for resource,status in self._pages[page].resources:
-            report+=["* Bad Resource: %s - returned HTTP status `%s`" % (resource,status)]
+            report+=["* Bad Resource: [{resource}]({resource}) - returned HTTP status `{status}`".format(resource=resource,status=status)]
           for link,status in self._pages[page].links:
-            report+=["* Bad HREF Link: %s - returned HTTP status `%s`" % (link,status)]
+            report+=["* Bad HREF Link: [{link}]({link}) - returned HTTP status `{status}`".format(link=link,status=status)]
           report+=[""]
       #Low priority
       if len(self._low) > 0:
         report+=["### Low Priority",""]
         for page in self._low:
-          report+=[page,""]
+          report+=["[{page}]({page})".format(page=page),""]
           for resource,status in self._pages[page].resources:
-            report+=["* Bad Resource: %s - returned HTTP status `%s`" % (resource,status)]
+            report+=["* Bad Resource: [{resource}]({resource}) - returned HTTP status `{status}`".format(resource=resource,status=status)]
           for link,status in self._pages[page].links:
-            report+=["* Bad HREF Link: %s - returned HTTP status `%s`" % (link,status)]
+            report+=["* Bad HREF Link: [{link}]({link}) - returned HTTP status `{status}`".format(link=link,status=status)]
           report+=[""]
 
     #Analysis section
@@ -214,12 +214,12 @@ class triage():
       self._analyzed=True
       report+=["### Probably an included resource",
                "",
-               "The following resources have more than 5 references. They probably exist in a template or include file rather than on the page itself. If they aren't then perhaps consider treating them that way.",
+               "The following resources have more than 5 references. They probably exist in a template or include file rather than on the page itself. If they aren't then perhaps consider treating them that way.  By resolving them the number of times they're referenced are the number of errors that will be solved.",
                ""]
       for resource in sorted(self._resource_count,key=self._resource_count.get,reverse=True):
         if self._resource_count[resource] < 5:
           break
-        report+=["* %s - found `%d` references to bad resource." % (resource,self._resource_count[resource])]
+        report+=["* [{resource}]({resource}) - found `{count}` references to bad resource.".format(resource=resource,count=self._resource_count[resource])]
       report+=[""]
 
     #top 50 links analysis
@@ -227,13 +227,13 @@ class triage():
       self._analyzed=True
       report+=["### Top 50 referenced links",
                "",
-               "Here's the top 50 or less referenced links no matter what page they're on.  If a developer or client knows the links are correct then perhaps preseed values for the next [`frontend_qa`](https://github.com/sag47/frontend_qa) run.",
+               "Here's the top 50 or less referenced links no matter what page they're on.  If a developer or client knows the links are correct then perhaps preseed values for the next [`frontend_qa`](https://github.com/sag47/frontend_qa) run.  For the higher count URLs it is more likely that the URL is part of an include file.  By resolving them the number of times they're referenced are the number of errors that will be solved.  It is also worth noting that if you have similar URLs which are different protocols (e.g. `https://...` and `http://...`) it should be decided which type of URL is desired and be consistent.  This will usually help to resolve an extra unneeded redirect.",
                ""]
       count=0
       for link in sorted(self._link_count,key=self._link_count.get,reverse=True):
         if not count < 50:
           break
-        report+=["* {link} - returned HTTP status `{status}` is referenced `{count}` times.".format(link=link,status=tested_links[link],count=self._link_count[link])]
+        report+=["* [{link}]({link}) - returned HTTP status `{status}` is referenced `{count}` times.".format(link=link,status=tested_links[link],count=self._link_count[link])]
         count+=1
       report+=[""]
 
