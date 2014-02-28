@@ -7,6 +7,7 @@
 import httplib
 import json
 import qa_nettools
+import re
 import selenium
 import socket
 import unittest
@@ -15,7 +16,6 @@ from cookielib import CookieJar
 from datetime import datetime
 from optparse import OptionParser
 from os.path import isfile
-from re import match
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sys import exit
@@ -36,6 +36,7 @@ def get_link_status(url):
     Gets the HTTP status of the url or returns an error associated with it.  Always returns a string.
   """
   https=False
+  url=re.sub(r'(.*)#.*$',r'\1',url)
   url=url.split('/',3)
   if len(url) > 3:
     path='/'+url[3]
@@ -289,7 +290,7 @@ Examples:
   crawler_excludes=options.crawler_excludes
   delay=float(options.delay)
   for suite in options.skip_suites.strip().split(','):
-    if  match('^[0-9]+-[0-9]+$',suite):
+    if  re.match('^[0-9]+-[0-9]+$',suite):
       for x in range(int(suite.split('-')[0]),int(suite.split('-')[1])+1):
         skip_suites.append(str(x))
     else:
