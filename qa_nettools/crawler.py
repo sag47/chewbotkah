@@ -34,8 +34,6 @@ class crawler():
     self.excludes=excludes
   def _consume(self,url):
     try:
-      if '?' in url:
-        url=url.split('?')[0]
       if url in self.pages:
         return
       #exclude patterns
