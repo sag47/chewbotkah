@@ -1,6 +1,7 @@
 ## v0.1.3
 
 * Feature: `--triage-report` option added.  A very useful feature for first testing extremely large sites.  Issues are triaged into different priorities and an analysis is provided based on the results.  Output format is markdown.
+* Feature: Render triage report into HTML for readability and distribution.
 * Feature: `--crawler-excludes` option added.  If matched in an exclude crawler does not attempt to crawl the URL but skips it.
 * Feature: `--preseed` option added.  URL HTTP status codes can be preseeded which are assumed to be OK.  This avoids unnecessary errors on `401` authorization pages which must be first manually tested.  The QA tester will not authorize with URLs.  This is also useful for my own testing during report generation debugging.
 * Suite 2 and suite 3 have been reversed in the testing order.
@@ -16,6 +17,8 @@
   * Bugfix proper HTTP responses are obtained with the new `httplib` method.
   * Bugfix send spoofed `User-Agent` header for more successful tests.
   * Bugfix send HTTP `Host` header for virtual hosting servers.
+  * Bugfix strip fragment identifier from URL requests (basically the `#` strings at the end of the URL).
+* Bugfix strip fragment identifier from URL lookup in suite 2 and suite 3 
 * Bugfix default domain filter updated based on target string when `--domain-filter` option is not specified.
 * Bugfix crawler not properly crawling URLs by stripping strings after `?` in the URL.  This was implemented in an earlier version and turns out to have been a mistake.
 
