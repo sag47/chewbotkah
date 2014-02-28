@@ -343,12 +343,12 @@ Examples:
     print >> stderr, "Running Test Suite 3: Checking HTTP status codes of all site resources."
     if not delay == 0:
       print >> stderr, "Request delay: %f" % delay
-    #try:
-    result=unittest.TextTestRunner(verbosity=0).run(resource_status_codes_suite())
-    #except Exception,e:
-    #  print >> stderr, "Exception Encountered: %s" % e.message
-    #  print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
-    #  exit(1)
+    try:
+      result=unittest.TextTestRunner(verbosity=0).run(resource_status_codes_suite())
+    except Exception,e:
+      print >> stderr, "Exception Encountered: %s" % e.message
+      print >> stderr, "See documentation README for common errors or file an issue at https://github.com/sag47/frontend_qa/issues."
+      exit(1)
     total+=result.testsRun
     failures+=len(result.failures)
     if not result.wasSuccessful():
