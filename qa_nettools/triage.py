@@ -62,6 +62,7 @@ class triage():
   _included_resource=False
   _resource_count={}
   _link_count={}
+  _preseeded_links=[]
   def __init__(self):
     pass
   def add_link(self,page,ref,status):
@@ -108,6 +109,13 @@ class triage():
     if not self._included_resource and self._resource_count[ref] >= 5:
       self._included_resource=True
     self._pages[page].add_resource(ref=ref,status=status)
+  def add_preseeded_links(self,links):
+    """
+      Add preseeded links to be included in the report.
+      Arguments:
+        links - list - list of links
+    """
+    self._preseeded_links=links
   def set_summary(self,total_tests=0,failed_tests=0,runtime="0s"):
     """
       Sets summary information to be displayed in the report.  This should be one of the last functions to run before report.
@@ -200,4 +208,11 @@ class triage():
              ""]
     for link in sorted(self._link_count,key=self._link_count.get,reverse=True):
       report+=["* {link} - returned HTTP status `{status}` is referenced `{count}` times.".format(link=link,status=tested_links[link],count=self._link_count[link])]
+    report+=["### Preseeded links",
+             "",
+             "The following links were preseeded. The links are assumed to be OK.",
+             "",
+             "```"]
+    report+=self._preseeded_links
+    report+=["```",""]
     return '\n'.join(report)
