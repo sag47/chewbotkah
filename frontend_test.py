@@ -22,7 +22,7 @@ from sys import exit
 from sys import stderr
 from time import sleep
 
-VERSION = '0.1.2'
+VERSION = '0.1.3'
 start_url='http://example.com/'
 domain_filter='example.com'
 href_whitelist=['']
