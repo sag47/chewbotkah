@@ -270,11 +270,11 @@ class triage():
                "",
                "Here's the top 50 or less referenced links no matter what page they're on.  If a developer or client knows the links are correct then perhaps preseed values for the next [`frontend_qa`](https://github.com/sag47/frontend_qa) run.  For the higher count URLs it is more likely that the URL is part of an include file.  By resolving them the number of times they're referenced are the number of errors that will be solved.  It is also worth noting that if you have similar URLs which are different protocols (e.g. `https://...` and `http://...`) it should be decided which type of URL is desired and be consistent.  This will usually help to resolve an extra unneeded redirect.",
                ""]
-      count=0
+      count=1
       for link in sorted(self._link_count,key=self._link_count.get,reverse=True):
-        if not count < 50:
+        if not count < 51:
           break
-        report+=["* [{link}]({link}) - returned HTTP status `{status}` is referenced `{count}` times.".format(link=link,status=tested_links[link],count=self._link_count[link])]
+        report+=["{count}. [{link}]({link}) - returned HTTP status `{status}` is referenced `{refcount}` times.".format(link=link,status=tested_links[link],refcount=self._link_count[link],count=count)]
         count+=1
       report+=[""]
 
