@@ -12,6 +12,8 @@ from sys import exit
 from sys import stderr
 from markdown2 import Markdown
 from quik import FileLoader
+from datetime import datetime
+
 
 PROJECT_PATH = os.path.realpath(os.path.dirname(__file__))
 TEMPLATE_ROOT=PROJECT_PATH+"/assets"
@@ -28,6 +30,7 @@ markdown=Markdown(extras=["fenced-code-blocks","toc"])
 with open(argv[1],'r') as f:
   htmlmarkdown=markdown.convert(f.read())
 
+date=datetime.now().strftime('%m/%d/%Y %I:%M:%S%p')
 loader = FileLoader(TEMPLATE_ROOT)
 template = loader.load_template('report.html')
 print template.render(locals(),loader=loader).encode('utf-8')
