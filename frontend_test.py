@@ -4,8 +4,10 @@
 #Ubuntu 13.10
 #Linux 3.11.0-12-generic x86_64
 #Python 2.7.5+
+import httplib
 import json
 import qa_nettools
+import re
 import selenium
 import socket
 import unittest
@@ -14,14 +16,13 @@ from cookielib import CookieJar
 from datetime import datetime
 from optparse import OptionParser
 from os.path import isfile
-from re import match
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sys import exit
 from sys import stderr
 from time import sleep
 
-VERSION = '0.1.2'
+VERSION = '0.1.3'
 start_url='http://example.com/'
 domain_filter='example.com'
 href_whitelist=['']
@@ -29,6 +30,53 @@ delay=0.0
 skip_suites=[]
 crawler_excludes='.exe,.dmg'
 tested_links={}
+
+def get_link_status(url):
+  """
+    Gets the HTTP status of the url or returns an error associated with it.  Always returns a string.
+  """
+  https=False
+  url=re.sub(r'(.*)#.*$',r'\1',url)
+  url=url.split('/',3)
+  if len(url) > 3:
+    path='/'+url[3]
+  else:
+    path='/'
+  if url[0] == 'http:':
+    port=80
+  elif url[0] == 'https:':
+    port=443
+    https=True
+  if ':' in url[2]:
+    host=url[2].split(':')[0]
+    port=url[2].split(':')[1]
+  else:
+    host=url[2]
+  try:
+    headers={'User-Agent':'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0',
+             'Host':host
+             }
+    if https:
+      conn=httplib.HTTPSConnection(host=host,port=port,timeout=10)
+    else:
+      conn=httplib.HTTPConnection(host=host,port=port,timeout=10)
+    conn.request(method="HEAD",url=path,headers=headers)
+    response=str(conn.getresponse().status)
+    conn.close()
+  except socket.gaierror,e:
+    response="Socket Error (%d): %s" % (e[0],e[1])
+  except StandardError,e:
+    if hasattr(e,'getcode') and len(e.getcode()) > 0:
+      response=str(e.getcode())
+    if hasattr(e, 'message') and len(e.message) > 0:
+      response=str(e.message)
+    elif hasattr(e, 'msg') and len(e.msg) > 0:
+      response=str(e.msg)
+    elif type('') == type(e):
+      response=e
+    else:
+      response="Exception occurred without a good error message.  Manually check the URL to see the status.  If it is believed this URL is 100% good then file a issue for a potential bug."
+  return response
 
 class TestWrongUrls(unittest.TestCase):
   """
@@ -56,7 +104,7 @@ class TestBadLinks(unittest.TestCase):
     self.status=status
     self.link=link
   def runTest(self):
-    self.assertEqual(str(self.status),
+    self.assertEqual(self.status,
                      "200",
                      msg="\n\nOn page: %(page)s\nBad Link: %(link)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
@@ -73,7 +121,7 @@ class TestBadResources(unittest.TestCase):
     self.status=status
     self.resource=resource
   def runTest(self):
-    self.assertEqual(str(self.status),
+    self.assertEqual(self.status,
                      "200",
                      msg="\n\nOn page: %(page)s\nResource: %(resource)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
@@ -97,64 +145,6 @@ def href_suite():
         suite.addTest(TestWrongUrls(domain_filter,page,link))
   return suite
 
-def resource_status_codes_suite():
-  """
-    Test Suite 3
-    This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
-  """
-  global tested_links
-  try:
-    sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
-    sel.start('captureNetworkTraffic=true')
-  except socket.error,e:
-    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
-    exit(1)
-  suite = unittest.TestSuite()
-  for page in pages.keys():
-    if not '2' in skip_suites and not tested_links[page] == "200":
-      #don't bother testing resources on a non-200 status page
-      continue
-    sel.open(page)
-    #wait for javascript to potentially execute
-    if delay != 0:
-      sleep(delay)
-    raw_xml = sel.captureNetworkTraffic('xml')
-    traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
-    #network traffic details
-    nc = qa_nettools.NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
-    http_details = nc.get_http_details()
-    for status,method,resource,size,time in http_details:
-      if method == 'GET':
-        if not status == 301 and not status == 302:
-          suite.addTest(TestBadResources(page,resource,status))
-  return suite
-
-def get_link_status(url):
-  """
-    Gets the HTTP status of the url or returns an error associated with it.  Always returns a string.
-  """
-  try:
-    request=urllib2.Request(url)
-    request.add_header('User-Agent','Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:26.0) Gecko/20100101 Firefox/26.0')
-    request.add_header('Host',url.split('/')[2])
-    cj=CookieJar()
-    opener=urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-    result=opener.open(request)
-    result.close()
-    return str(result.getcode())
-  except urllib2.HTTPError,e:
-    #HTTPError has a getcode() function
-    return str(e.getcode())
-  except Exception,e:
-    if hasattr(e, 'message') and len(e.message) > 0:
-      return str(e.message)
-    elif hasattr(e, 'msg') and len(e.msg) > 0:
-      return str(e.msg)
-    elif hasattr(e, 'reason') and type(socket.gaierror) == type(e.reason):
-      return str(e.reason[0]+": "+e.reason[1])
-    else:
-      return "Exception occurred without a good error message.  Manually check the URL to see the status.  If it is believed this URL is 100% good then file a issue for a potential bug."
-
 def link_status_codes_suite():
   """
     Test Suite 2
@@ -164,12 +154,14 @@ def link_status_codes_suite():
   #can skip links rather than double test
   #link is the key, http status code is the value
   global tested_links
+  global triage
+  global options
   suite = unittest.TestSuite()
   for page in pages.keys():
-    if not page in tested_links:
-      if delay != 0:
+    if not re.sub(r'(.*)#.*$',r'\1',page) in tested_links:
+      if not delay == 0:
         sleep(delay)
-      tested_links[page]=get_link_status(page)
+      tested_links[re.sub(r'(.*)#.*$',r'\1',page)]=get_link_status(page)
     if not tested_links[page] == "200":
       #don't bother testing links on a non-200 status page
       continue
@@ -179,11 +171,50 @@ def link_status_codes_suite():
           #if the URL has already been tested then skip testing and give the status
           suite.addTest(TestBadLinks(page,linked_page,tested_links[linked_page]))
         else:
-          if delay != 0:
+          if not delay == 0:
             sleep(delay)
           result=get_link_status(linked_page)
           suite.addTest(TestBadLinks(page,linked_page,result))
           tested_links[linked_page]=result
+        if len(options.triage_report) > 0 and not tested_links[linked_page] == "200":
+          triage.add_link(page,linked_page,tested_links[linked_page])
+  return suite
+
+def resource_status_codes_suite():
+  """
+    Test Suite 3
+    This suite profiles the loading of each page from crawler data and determins if there are any non-200 HTTP status resources loading on each page.
+  """
+  global tested_links
+  global triage
+  global options
+  try:
+    sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
+    sel.start('captureNetworkTraffic=true')
+  except socket.error,e:
+    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
+    exit(1)
+  suite = unittest.TestSuite()
+  for page in pages.keys():
+    if not re.sub(r'(.*)#.*$',r'\1',page) in tested_links:
+      tested_links[re.sub(r'(.*)#.*$',r'\1',page)]=get_link_status(page)
+    if not tested_links[re.sub(r'(.*)#.*$',r'\1',page)] == "200":
+      #don't bother testing resources on a non-200 status page
+      continue
+    sel.open(page)
+    #wait for javascript to potentially execute
+    if not delay == 0:
+      sleep(delay)
+    raw_xml = sel.captureNetworkTraffic('xml')
+    traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
+    #network traffic details
+    nc = qa_nettools.NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
+    http_details = nc.get_http_details()
+    for status,method,resource,size,time in http_details:
+      if method == 'GET':
+        suite.addTest(TestBadResources(page,resource,str(status)))
+        if len(options.triage_report) > 0 and not str(status) == "200":
+          triage.add_resource(page,resource,str(status))
   return suite
 
 def crawl():
@@ -227,6 +258,7 @@ Examples:
   parser.add_option('--load-crawl',dest="load_crawl", help="Load JSON formatted crawl data instead of crawling.", metavar="FILE")
   parser.add_option('--crawler-excludes',dest="crawler_excludes", help="Comma separated word list.  If word is in URL then the crawler won't attempt to crawl it.", metavar="LIST")
   parser.add_option('--preseed',dest="preseed", help="JSON formatted file with a default list of links and status to override for testing.", metavar="FILE")
+  parser.add_option('--triage-report',dest="triage_report", help="Generate a report with all errors triaged in a markdown format.", metavar="FILE")
   parser.set_defaults(domain_filter=domain_filter,
                       start_url=start_url,
                       href_whitelist=','.join(href_whitelist),
@@ -235,7 +267,8 @@ Examples:
                       save_crawl='',
                       load_crawl='',
                       crawler_excludes=crawler_excludes,
-                      preseed="")
+                      preseed="",
+                      triage_report="")
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
@@ -257,12 +290,14 @@ Examples:
   crawler_excludes=options.crawler_excludes
   delay=float(options.delay)
   for suite in options.skip_suites.strip().split(','):
-    if  match('^[0-9]+-[0-9]+$',suite):
+    if  re.match('^[0-9]+-[0-9]+$',suite):
       for x in range(int(suite.split('-')[0]),int(suite.split('-')[1])+1):
         skip_suites.append(str(x))
     else:
       skip_suites.append(suite)
 
+  if len(options.triage_report) > 0:
+    triage=qa_nettools.triage()
   starttime=datetime.now()
   print >> stderr, "\n"+"#"*70
   if len(options.preseed):
@@ -270,8 +305,10 @@ Examples:
       print >> stderr, "Preseeding results."
       with open(options.preseed,'r') as f:
         tested_links=json.load(f)
+      if len(options.triage_report) > 0:
+        triage.add_preseeded_links(tested_links.keys())
     except Exception,e:
-      print >> stderr, "Not a valid crawl data file!  Aborting."
+      print >> stderr, "Not a valid preseed data file!  Must be in JSON format.  Aborting."
       exit(1)
   if len(options.load_crawl) == 0:
     print >> stderr, "Target: %s" % start_url
@@ -295,7 +332,7 @@ Examples:
       with open(options.load_crawl,'r') as f:
         pages=json.load(f)
     except Exception,e:
-      print >> stderr, "Not a valid crawl data file!  Aborting."
+      print >> stderr, "Not a valid crawl data file!  Must be in JSON format.  Aborting."
       exit(1)
   #end of crawl stage
 
@@ -353,7 +390,15 @@ Examples:
   secs=(endtime-starttime).seconds
   microsecs=(endtime-starttime).microseconds/1000000.0
   if mins > 0:
-    print >> stderr, "Elapsed time: %(mins)dm %(secs)ss" % {'mins': mins,'secs':secs-(mins*60)+microsecs}
+    runtime="%(mins)dm %(secs)ss" % {'mins': mins,'secs':secs-(mins*60)+microsecs}
   else:
-    print >> stderr, "Elapsed time: %(secs)ss" % {'secs':secs+microsecs}
+    runtime="%(secs)ss" % {'secs':secs+microsecs}
+  print >> stderr, "Elapsed time: %(runtime)s" % {'runtime':runtime}
+  if len(options.triage_report) > 0:
+    print >> stderr, "Generating triage report."
+    triage.set_summary(total_tests=total,failed_tests=failures,runtime=runtime,request_delay=delay)
+    triage.triage_items()
+    with open(options.triage_report,'w') as f:
+      f.write(triage.report(tested_links=tested_links))
+
   exit(STATUS)

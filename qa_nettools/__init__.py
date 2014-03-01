@@ -9,3 +9,4 @@ The nettools package contains utilities I've authored and includes utilities oth
 """
 from crawler import crawler
 from NetworkCapture import NetworkCapture
+from triage import triage
