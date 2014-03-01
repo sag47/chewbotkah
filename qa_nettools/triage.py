@@ -169,7 +169,7 @@ class triage():
              "",
              "### Definitions",
              "",
-             "* `Bad Rresource` - A bad resource is an asset being loaded on a page.  Typically resources include CSS files, JavaScript files, images, or content loaded via AJAX.",
+             "* `Bad Resource` - A bad resource is an asset being loaded on a page.  Typically resources include CSS files, JavaScript files, images, or content loaded via AJAX.",
              "* `Bad HREF Link` - A bad HREF link is an anchor link (`<a href=\"...`) located on a web page.  If you see the same link appearing more than once it means that there are multiple anchor link references on that page.",
              ""]
     #Prioritized items
