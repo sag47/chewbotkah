@@ -77,7 +77,12 @@ code, tt {
 code {
     white-space: nowrap;
 }
-
+code:before, code:after, tt:before, tt:after {
+    content: "\00a0";
+}
+pre code:before, pre code:after, pre tt:before, pre tt:after {
+    content: normal;
+}
 p, blockquote, ul, ol, dl, table, pre {
     margin: 15px 0;
 }
@@ -107,16 +112,4 @@ pre code, pre tt {
     overflow: initial;
     padding: 0;
     word-wrap: normal;
-}
-code:before, code:after, tt:before, tt:after {
-    content: " ";
-}
-pre code:before, pre code:after, pre tt:before, pre tt:after {
-    content: normal;
-}
-code:before, code:after, tt:before, tt:after {
-    content: " ";
-}
-pre code:before, pre code:after, pre tt:before, pre tt:after {
-    content: normal;
 }
