@@ -5,6 +5,15 @@
 <meta charset="UTF-8">
 <style>
 #include( "style.css" )</style>
+<script>
+function init(){
+  /* If JS enabled make the table of contents floating and collapsable */
+  document.getElementsByClassName('toc')[0].setAttribute("style","position:fixed;right:72px");
+  document.getElementsByClassName('toc')[0].children[0].setAttribute("style","cursor:pointer");
+  document.getElementsByClassName('toc')[0].children[0].setAttribute("onclick","(function(el){(el.style.display.length==0)?el.style.display='none':el.style.display=''})(document.getElementsByClassName('toc')[0].children[1])");
+}
+onload=init;
+</script>
 </head>
 <body>
 @htmlmarkdown
