@@ -113,3 +113,36 @@ pre code, pre tt {
     padding: 0;
     word-wrap: normal;
 }
+.toc {
+    background: none repeat scroll 0 0 #F2F8FA;
+    border: 1px solid #DDDDDD;
+    border-radius: 3px;
+    float: right;
+    font-size: 80%;
+    margin: 0 0 2em 1em;
+    padding: 0.5em 1em;
+    position: relative;
+    z-index: 50;
+}
+.toc h4 {
+    font-size: 12px;
+    margin: 0;
+    color: #555555;
+}
+.toc ul, .toc ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.toc ul ul, .toc ol ol {
+    padding-left: 1.2em;
+}
+.toc li {
+    margin: 0;
+    padding: 0;
+}
+.toc :link,.toc *:visited {
+    border-bottom: 1px dotted #c9d5d8;
+    color: #8E9597;
+    text-decoration: none;
+}

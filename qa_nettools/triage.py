@@ -142,6 +142,18 @@ class triage():
       Arguments:
         tested_links - dictionary - a dictionary of links and status codes
     """
+    #Initialize table of contents
+    toc=['<div class="toc">',
+         '<h4>Table of Contents</h4>',
+         '<ol>',
+         '  <li>',
+         '    <a href="#summary">Summary</a>',
+         '    <ol>',
+         '      <li>',
+         '        <a href="#definitions">Definitions</a>',
+         '      </li>',
+         '    </ol>',
+         '  </li>']
     #Report Summary
     report=["# Summary",""]
     report+=["Unit tests",
@@ -162,9 +174,15 @@ class triage():
              ""]
     #Prioritized items
     if len(self._high) > 0 or len(self._medium) > 0 or len(self._low) > 0:
+      toc+=['  <li>',
+            '    <a href="#priorities">Priorities</a>',
+            '    <ol>']
       report+=["# Priorities",""]
       #High priority
       if len(self._high) > 0:
+        toc+=['      <li>',
+              '        <a href="#high-priority">High Priority</a>',
+              '      </li>']
         report+=["### High Priority",""]
         report+=["There are `{count}` high priority pages.".format(count=len(self._high)),""]
         for page in self._high:
@@ -176,6 +194,9 @@ class triage():
           report+=[""]
       #Medium priority
       if len(self._medium) > 0:
+        toc+=['      <li>',
+              '        <a href="#medium-priority">Medium Priority</a>',
+              '      </li>']
         report+=["### Medium Priority",""]
         report+=["There are `{count}` medium priority pages.".format(count=len(self._medium)),""]
         for page in self._medium:
@@ -187,6 +208,9 @@ class triage():
           report+=[""]
       #Low priority
       if len(self._low) > 0:
+        toc+=['      <li>',
+              '        <a href="#low-priority">Low Priority</a>',
+              '      </li>']
         report+=["### Low Priority",""]
         report+=["There are `{count}` low priority pages.".format(count=len(self._low)),""]
         for page in self._low:
@@ -196,12 +220,20 @@ class triage():
           for link,status in self._pages[page].links:
             report+=["* Bad HREF Link: [{link}]({link}) - returned HTTP status `{status}`".format(link=link,status=status)]
           report+=[""]
+      toc+=['    </ol>',
+            '  </li>']
 
     #Analysis section
+    toc+=['  <li>',
+          '    <a href="#analysis">Analysis</a>',
+          '    <ol>']
     report+=["# Analysis",""]
 
     #analysis on HTTP status codes
     if self._found404 or self._found401 or self._found30x:
+      toc+=['      <li>',
+            '          <a href="#notes-for-status-codes">Notes for status codes</a>',
+            '      </li>']
       self._analyzed=True
       report+=["### Notes for status codes",""]
       if self._found404:
@@ -214,6 +246,9 @@ class triage():
 
     #probably an included resource analysis
     if self._included_resource:
+      toc+=['      <li>',
+            '          <a href="#probably-an-included-resource">Probably an included resource</a>',
+            '      </li>']
       self._analyzed=True
       report+=["### Probably an included resource",
                "",
@@ -227,6 +262,9 @@ class triage():
 
     #top 50 links analysis
     if len(self._link_count) > 0:
+      toc+=['      <li>',
+            '          <a href="#top-50-referenced-links">Top 50 referenced links</a>',
+            '      </li>']
       self._analyzed=True
       report+=["### Top 50 referenced links",
                "",
@@ -242,6 +280,9 @@ class triage():
 
     #preseeded links analysis
     if len(self._preseeded_links) > 0:
+      toc+=['      <li>',
+            '          <a href="#preseeded-links">Preseeded links</a>',
+            '      </li>']
       self._analyzed=True
       report+=["### Preseeded links",
                "",
@@ -250,7 +291,12 @@ class triage():
                "```"]
       report+=self._preseeded_links
       report+=["```",""]
+    toc+=['    </ol>',
+          '  </li>',
+          '</ol>',
+          '</div>',
+          '']
 
     if not self._analyzed:
       report+=["No comment.",""]
-    return '\n'.join(report)
+    return '\n'.join(toc+report)

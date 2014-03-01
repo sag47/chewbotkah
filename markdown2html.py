@@ -23,7 +23,7 @@ if not os.path.isfile(argv[1]):
   print >> stderr, "File %s does not exist." % argv[1]
   exit(1)
 
-markdown=Markdown(extras=["fenced-code-blocks"])
+markdown=Markdown(extras=["fenced-code-blocks","toc"])
 
 with open(argv[1],'r') as f:
   htmlmarkdown=markdown.convert(f.read())
