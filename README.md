@@ -20,18 +20,21 @@ If you run `setup.sh` twice it should autodetect running processes.
 
 It crawls a frontend and attempts to run basic quality assurance tests in stages.
 
-Currently there are only two stages.
+Currently there are only three stages.
 
 1. Crawls a domain using a domain filter so it doesn't attempt to crawl the whole internet.  It will grab every unique URL it can scrape.  This builds an index of domain specific pages matching the `--domain-filter` option.  Each index contains a set of links found on the page.
 2. Run individual test suites on the crawled data.
+3. [Triage](docs/triage_report.md) the results so they can be resolved in a sane manner.
+
+Each stage and steps in between are optional for the most part.  If you have crawl data saved you can skip crawling.  You can also skip individual unit tests.  The triage report is not done by default.
 
 ## Suites
 
 The testing stages are organized into Suites.  Currently there are only 3 suites.
 
 * Suite 1 - This suite analyzes crawler data and checks for links that are not approved through whitelist or do not match the `--domain-filter`.  This operates on the `href` attribute of `<a>` element in the scrape data.  This does not actually perform any network requests but uses the crawl data.
-* Suite 2 - This suite profiles the loading of each page on the domain from crawler data and determins if there are any non-200 HTTP status resources loading on each page.  This only tests the crawler indexes and does not check links within pages.
-* Suite 3 - This suite loads every hyperlink reference on every page and checks for bad links in the HTML.  This test may go off site to test a link.
+* Suite 2 - This suite loads every hyperlink reference on every page and checks for bad links in the HTML.  This test may go off site to test a link.
+* Suite 3 - This suite profiles the loading of each page on the domain from crawler data and determins if there are any non-200 HTTP status resources loading on each page.  This only tests the crawler indexes and does not check links within pages.
 
 ## Program Options
 
@@ -44,6 +47,8 @@ The following options are available for `frontend_test.py`.
 * `--skip-suites=NUM` - Skip test suites to avoid running them.  Comma separated list of numbers or ranges.
 * `--save-crawl=FILE` - Save your crawl data to a JSON formatted file.
 * `--load-crawl=FILE` - Load JSON formatted crawl data instead of crawling.
+* `--crawler-excludes=LIST` - Comma separated word list.  If word is in URL then the crawler won't attempt to crawl it.
+* `--triage-report=FILE` -  Generate a report with all errors triaged in a markdown format.
 
 ## Commonly encountered exceptions
 

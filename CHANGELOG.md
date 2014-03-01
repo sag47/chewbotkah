@@ -1,3 +1,27 @@
+## v0.1.3
+
+* Feature: `--triage-report` option added.  A very useful feature for first testing extremely large sites.  Issues are triaged into different priorities and an analysis is provided based on the results.  Output format is markdown.
+* Feature: Render triage report into HTML for readability and distribution.
+* Feature: `--crawler-excludes` option added.  If matched in an exclude crawler does not attempt to crawl the URL but skips it.
+* Feature: `--preseed` option added.  URL HTTP status codes can be preseeded which are assumed to be OK.  This avoids unnecessary errors on `401` authorization pages which must be first manually tested.  The QA tester will not authorize with URLs.  This is also useful for my own testing during report generation debugging.
+* Suite 2 and suite 3 have been reversed in the testing order.
+* Suite 2 (formerly suite 3) fixes and misc.
+  * Major bugfix suite 2.  Previously it was not working.  Since I'm only concerned with HTTP status codes I am using `urllib2` instead.
+  * Bugfix don't skip 301/302 resources in test suite 2.
+  * Bugfix only check `http` URLs and ignore all others in suite 2.
+  * Bugfix test suite 2 now adheres to the request delay setting.
+  * Performance optimization: Don't attempt to check a URL multiple times but instead store result in an index.  If it has already been checked then assume the status hasn't changed.
+* Bugfix optimize suite 3 (formerly suite 2) don't attempt to profile pages which don't have an HTTP 200 status code.
+* Link testing has been pulled into a separate function so it can be utilized by both test suite 2 and suite 3.  The following are bugfixes implemented in this function.
+  * Performance optimization: New method using lower level `httplib` to grab http `HEAD` rather than the whole response using `urllib2`.
+  * Bugfix proper HTTP responses are obtained with the new `httplib` method.
+  * Bugfix send spoofed `User-Agent` header for more successful tests.
+  * Bugfix send HTTP `Host` header for virtual hosting servers.
+  * Bugfix strip fragment identifier from URL requests (basically the `#` strings at the end of the URL).
+* Bugfix strip fragment identifier from URL lookup in suite 2 and suite 3 
+* Bugfix default domain filter updated based on target string when `--domain-filter` option is not specified.
+* Bugfix crawler not properly crawling URLs by stripping strings after `?` in the URL.  This was implemented in an earlier version and turns out to have been a mistake.
+
 ## v0.1.2
 
 * Added test suite 3.  Test the status codes of links in HTML.

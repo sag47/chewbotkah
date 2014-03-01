@@ -15,3 +15,6 @@
 * [unittest for loop](http://stackoverflow.com/questions/1193909/pythons-unittest-and-dynamic-creation-of-test-cases), see also [test generators](https://nose.readthedocs.org/en/latest/writing_tests.html#test-generators)
 * [unittest throw warnings](http://stackoverflow.com/questions/3892218/how-to-test-with-pythons-unittest-that-a-warning-has-been-thrown), see also [testing warnings](http://docs.python.org/2/library/warnings.html#testing-warnings)
 
+# General references
+
+* [json dump class](http://stackoverflow.com/questions/3768895/python-how-to-make-a-class-json-serializable)

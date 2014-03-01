@@ -29,8 +29,11 @@ elif [ "$USER" = "root" ];then
   apt-get -y install openjdk-7-jre unzip python-pip firefox xvfb xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-tipa
   #install selenium bindings for python
   pip install selenium
-  #nose test framework
-  pip install nose
+  #markdown2html prereqs
+  pip install markdown2
+  pip install pygments
+  pip install quik
+
 
   # Download and copy the ChromeDriver to /usr/local/bin
   cd /tmp
