@@ -30,6 +30,7 @@ delay=0.0
 skip_suites=[]
 crawler_excludes='.exe,.dmg'
 tested_links={}
+preseed={}
 
 def get_link_status(url):
   """
@@ -136,6 +137,8 @@ def href_suite():
   global pages
   suite = unittest.TestSuite()
   for page in pages.keys():
+    if page == '__settings__':
+      continue
     for link in pages[page]:
       warn=True
       for rule in href_whitelist:
@@ -158,6 +161,8 @@ def link_status_codes_suite():
   global options
   suite = unittest.TestSuite()
   for page in pages.keys():
+    if page == '__settings__':
+      continue
     if not re.sub(r'(.*)#.*$',r'\1',page) in tested_links:
       if not delay == 0:
         sleep(delay)
@@ -196,6 +201,8 @@ def resource_status_codes_suite():
     exit(1)
   suite = unittest.TestSuite()
   for page in pages.keys():
+    if page == '__settings__':
+      continue
     if not re.sub(r'(.*)#.*$',r'\1',page) in tested_links:
       tested_links[re.sub(r'(.*)#.*$',r'\1',page)]=get_link_status(page)
     if not tested_links[re.sub(r'(.*)#.*$',r'\1',page)] == "200":
@@ -304,9 +311,9 @@ Examples:
     try:
       print >> stderr, "Preseeding results."
       with open(options.preseed,'r') as f:
-        tested_links=json.load(f)
+        tested_links=preseed=json.load(f)
       if len(options.triage_report) > 0:
-        triage.add_preseeded_links(tested_links.keys())
+        triage.add_preseeded_links(preseed.keys())
     except Exception,e:
       print >> stderr, "Not a valid preseed data file!  Must be in JSON format.  Aborting."
       exit(1)
