@@ -33,6 +33,7 @@ tested_links={}
 preseed={}
 profiling_results={}
 pages={}
+pages['__settings__']={}
 save_results={}
 
 def get_link_status(url):
@@ -197,12 +198,13 @@ def resource_status_codes_suite():
   global triage
   global options
   global profiling_results
-  try:
-    sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
-    sel.start('captureNetworkTraffic=true')
-  except socket.error,e:
-    print >> stderr, "Could not open connection to Selenium.  Did you start it?"
-    exit(1)
+  if not len(options.load_results):
+    try:
+      sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
+      sel.start('captureNetworkTraffic=true')
+    except socket.error,e:
+      print >> stderr, "Could not open connection to Selenium.  Did you start it?"
+      exit(1)
   suite = unittest.TestSuite()
   for page in pages.keys():
     if page == '__settings__':
@@ -270,6 +272,7 @@ Examples:
   parser.add_option('--save-crawl',dest="save_crawl", help="Save your crawl data to a JSON formatted file.", metavar="FILE")
   parser.add_option('--load-crawl',dest="load_crawl", help="Load JSON formatted crawl data instead of crawling.", metavar="FILE")
   parser.add_option('--crawler-excludes',dest="crawler_excludes", help="Comma separated word list.  If word is in URL then the crawler won't attempt to crawl it.", metavar="LIST")
+  parser.add_option("--force-crawl",dest="force_crawl", action="store_true", default=False, help="Force the crawler to run even if using --load-results.")
   parser.add_option('--preseed',dest="preseed", help="JSON formatted file with a default list of links and status to override for testing.", metavar="FILE")
   parser.add_option('--triage-report',dest="triage_report", help="Generate a report with all errors triaged in a markdown format.", metavar="FILE")
   parser.add_option('--save-results',dest="save_results", help="Save all test results to a file which will be loaded later.", metavar="FILE")
@@ -298,14 +301,18 @@ Examples:
   if len(options.preseed) > 0 and not isfile(options.preseed):
     print >> stderr, "Preseed file does not exist."
     exit(1)
-  start_url=options.start_url
-  if not options.start_url == 'http://example.com/' and options.domain_filter == 'example.com':
-    domain_filter=options.start_url.split('/')[2]
-  else:
-    domain_filter=options.domain_filter
-  href_whitelist=options.href_whitelist.strip().split(',')
-  crawler_excludes=options.crawler_excludes
-  delay=float(options.delay)
+  if len(options.load_results) > 0 and not isfile(options.load_results):
+    print >> stderr, "Load results file does not exist."
+    exit(1)
+  if not len(options.load_results) > 0:
+    start_url=options.start_url
+    if not options.start_url == 'http://example.com/' and options.domain_filter == 'example.com':
+      domain_filter=options.start_url.split('/')[2]
+    else:
+      domain_filter=options.domain_filter
+    href_whitelist=options.href_whitelist.strip().split(',')
+    crawler_excludes=options.crawler_excludes
+    delay=float(options.delay)
   for suite in options.skip_suites.strip().split(','):
     if  re.match('^[0-9]+-[0-9]+$',suite):
       for x in range(int(suite.split('-')[0]),int(suite.split('-')[1])+1):
@@ -313,57 +320,26 @@ Examples:
     else:
       skip_suites.append(suite)
 
+  #Load pre-saved results
+  if len(options.load_results) > 0:
+    try:
+      with open(options.load_results,'r') as f:
+        save_results=json.load(f)
+      pages=save_results['pages']
+      preseed=save_results['preseed']
+      profiling_results=save_results['profiling_results']
+    except Exception,e:
+      print >> stderr, "Not a valid load results file!  Must be in JSON format.  Aborting."
+      exit(1)
+
+
   if len(options.triage_report) > 0:
     triage=qa_nettools.triage()
   starttime=datetime.now()
 
-  #start of crawl stage
-  if len(options.load_crawl) == 0:
-    print >> stderr, "Target: %s" % start_url
-    print >> stderr, "Domain Filter: %s" % domain_filter
-    print >> stderr, "Crawling site..."
-    print >> stderr, "Crawler Excludes: %s" % crawler_excludes
-    crawl()
-    if len(options.save_crawl) > 0:
-      print >> stderr, "Saving crawl data: %s" % options.save_crawl
-      try:
-        pages['__settings__']={}
-        pages['__settings__']['VERSION']=VERSION
-        pages['__settings__']['start_url']=start_url
-        pages['__settings__']['domain_filter']=domain_filter
-        pages['__settings__']['href_whitelist']=href_whitelist
-        pages['__settings__']['delay']=delay
-        pages['__settings__']['skip_suites']=skip_suites
-        pages['__settings__']['crawler_excludes']=crawler_excludes
-        pages['__settings__']['preseed']=preseed
-        with open(options.save_crawl,'w') as f:
-          json.dump(pages,f)
-      except Exception,e:
-        print >> stderr, "Error: %s" % e.message
-        STATUS=1
-  else:
-    print >> stderr, "Load crawl data: %s" % options.load_crawl
-    try:
-      with open(options.load_crawl,'r') as f:
-        pages=json.load(f)
-    except Exception,e:
-      print >> stderr, "Not a valid crawl data file!  Must be in JSON format.  Aborting."
-      exit(1)
-    start_url=pages['__settings__']['start_url']
-    domain_filter=pages['__settings__']['domain_filter']
-    href_whitelist=pages['__settings__']['href_whitelist']
-    delay=float(pages['__settings__']['delay'])
-    crawler_excludes=pages['__settings__']['crawler_excludes']
-    tested_links=preseed=pages['__settings__']['preseed']
-    print >> stderr, "Original crawl settings..."
-    print >> stderr, "Target: %s" % start_url
-    print >> stderr, "Domain Filter: %s" % domain_filter
-    print >> stderr, "Crawler Excludes: %s" % crawler_excludes
-  #end of crawl stage
-
   #preseed results
   print >> stderr, "\n"+"#"*70
-  if len(options.preseed):
+  if ( len(options.preseed) > 0 and not len(options.load_results) > 0 ) or ( len(options.preseed) > 0 and options.force_crawl ):
     try:
       print >> stderr, "Preseeding results."
       with open(options.preseed,'r') as f:
@@ -372,6 +348,49 @@ Examples:
       print >> stderr, "Not a valid preseed data file!  Must be in JSON format.  Aborting."
       exit(1)
   #end preseed results
+
+  #start of crawl stage
+  if ( len(options.load_crawl) == 0 and not len(options.load_results) > 0 ) or options.force_crawl:
+    print >> stderr, "Target: %s" % start_url
+    print >> stderr, "Domain Filter: %s" % domain_filter
+    print >> stderr, "Crawling site..."
+    print >> stderr, "Crawler Excludes: %s" % crawler_excludes
+    crawl()
+    if len(options.save_crawl) > 0:
+      print >> stderr, "Saving crawl data: %s" % options.save_crawl
+      try:
+        pages['__settings__']['VERSION']=VERSION
+        pages['__settings__']['start_url']=start_url
+        pages['__settings__']['domain_filter']=domain_filter
+        pages['__settings__']['href_whitelist']=href_whitelist
+        pages['__settings__']['delay']=delay
+        pages['__settings__']['skip_suites']=skip_suites
+        pages['__settings__']['crawler_excludes']=crawler_excludes
+        with open(options.save_crawl,'w') as f:
+          json.dump(pages,f)
+      except Exception,e:
+        print >> stderr, "Error: %s" % e.message
+        STATUS=1
+  else:
+    print >> stderr, "Load crawl data: %s" % options.load_crawl
+    if len(options.load_crawl) > 0:
+      try:
+        with open(options.load_crawl,'r') as f:
+          pages=json.load(f)
+      except Exception,e:
+        print >> stderr, "Not a valid crawl data file!  Must be in JSON format.  Aborting."
+        exit(1)
+    start_url=pages['__settings__']['start_url']
+    domain_filter=pages['__settings__']['domain_filter']
+    href_whitelist=pages['__settings__']['href_whitelist']
+    delay=float(pages['__settings__']['delay'])
+    crawler_excludes=pages['__settings__']['crawler_excludes']
+    print >> stderr, "Original crawl settings..."
+    print >> stderr, "Target: %s" % start_url
+    print >> stderr, "Domain Filter: %s" % domain_filter
+    print >> stderr, "Crawler Excludes: %s" % crawler_excludes
+  #end of crawl stage
+
 
   if len(options.triage_report) > 0:
     triage.add_preseeded_links(preseed.keys())
@@ -444,9 +463,16 @@ Examples:
     except Exception,e:
       print >> stderr, "Error: %s" % e.message
       STATUS=1
-  if len(options.save_results) > 0 and not len(options.load_results) > 0:
+  if len(options.save_results) > 0 and not options.save_results == options.load_results:
     try:
       print >> stderr, "Saving results to %s." % options.save_results
+      pages['__settings__']['VERSION']=VERSION
+      pages['__settings__']['start_url']=start_url
+      pages['__settings__']['domain_filter']=domain_filter
+      pages['__settings__']['href_whitelist']=href_whitelist
+      pages['__settings__']['delay']=delay
+      pages['__settings__']['skip_suites']=skip_suites
+      pages['__settings__']['crawler_excludes']=crawler_excludes
       save_results['profiling_results']=profiling_results
       save_results['pages']=pages
       save_results['preseed']=preseed
