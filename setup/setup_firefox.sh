@@ -11,7 +11,8 @@
 set -e
 
 if [ "$1" = "kill" ];then
-  killall -9 Xvfb java firefox openbox
+  #killall -9 Xvfb java firefox openbox
+  killall -9 Xvfb java firefox
   exit
 fi
 
@@ -26,7 +27,8 @@ elif [ "$USER" = "root" ];then
   apt-get update
 
   # Install java, firefox, pip, unzip, and Xvfb
-  apt-get -y install openjdk-7-jre unzip python-pip firefox xvfb xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-tipa openbox
+  #apt-get -y install openjdk-7-jre unzip python-pip firefox xvfb xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-tipa openbox
+  apt-get -y install openjdk-7-jre unzip python-pip firefox xvfb xfonts-cyrillic xfonts-100dpi xfonts-75dpi xfonts-tipa
   #install selenium bindings for python
   pip install selenium
   #markdown2html prereqs
