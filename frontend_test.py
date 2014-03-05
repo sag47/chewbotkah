@@ -312,17 +312,14 @@ Examples:
       print >> stderr, "Preseeding results."
       with open(options.preseed,'r') as f:
         tested_links=preseed=json.load(f)
-      if len(options.triage_report) > 0:
-        triage.add_preseeded_links(preseed.keys())
     except Exception,e:
       print >> stderr, "Not a valid preseed data file!  Must be in JSON format.  Aborting."
       exit(1)
-  if len(options.load_crawl) == 0:
-    print >> stderr, "Target: %s" % start_url
-    print >> stderr, "Domain Filter: %s" % domain_filter
 
   #start of crawl stage
   if len(options.load_crawl) == 0:
+    print >> stderr, "Target: %s" % start_url
+    print >> stderr, "Domain Filter: %s" % domain_filter
     print >> stderr, "Crawling site..."
     print >> stderr, "Crawler Excludes: %s" % crawler_excludes
     crawl()
@@ -350,7 +347,20 @@ Examples:
     except Exception,e:
       print >> stderr, "Not a valid crawl data file!  Must be in JSON format.  Aborting."
       exit(1)
+    start_url=pages['__settings__']['start_url']
+    domain_filter=pages['__settings__']['domain_filter']
+    href_whitelist=pages['__settings__']['href_whitelist']
+    delay=float(pages['__settings__']['delay'])
+    crawler_excludes=pages['__settings__']['crawler_excludes']
+    preseed=pages['__settings__']['preseed']
+    print >> stderr, "Original crawl settings..."
+    print >> stderr, "Target: %s" % start_url
+    print >> stderr, "Domain Filter: %s" % domain_filter
+    print >> stderr, "Crawler Excludes: %s" % crawler_excludes
   #end of crawl stage
+
+  if len(options.triage_report) > 0:
+    triage.add_preseeded_links(preseed.keys())
 
   #start of suite 1
   if not '1' in skip_suites:
