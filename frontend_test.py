@@ -329,6 +329,15 @@ Examples:
     if len(options.save_crawl) > 0:
       print >> stderr, "Saving crawl data: %s" % options.save_crawl
       try:
+        pages['__settings__']={}
+        pages['__settings__']['VERSION']=VERSION
+        pages['__settings__']['start_url']=start_url
+        pages['__settings__']['domain_filter']=domain_filter
+        pages['__settings__']['href_whitelist']=href_whitelist
+        pages['__settings__']['delay']=delay
+        pages['__settings__']['skip_suites']=skip_suites
+        pages['__settings__']['crawler_excludes']=crawler_excludes
+        pages['__settings__']['preseed']=preseed
         with open(options.save_crawl,'w') as f:
           json.dump(pages,f)
       except Exception,e:
