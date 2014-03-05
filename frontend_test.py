@@ -306,15 +306,6 @@ Examples:
   if len(options.triage_report) > 0:
     triage=qa_nettools.triage()
   starttime=datetime.now()
-  print >> stderr, "\n"+"#"*70
-  if len(options.preseed):
-    try:
-      print >> stderr, "Preseeding results."
-      with open(options.preseed,'r') as f:
-        tested_links=preseed=json.load(f)
-    except Exception,e:
-      print >> stderr, "Not a valid preseed data file!  Must be in JSON format.  Aborting."
-      exit(1)
 
   #start of crawl stage
   if len(options.load_crawl) == 0:
@@ -352,12 +343,24 @@ Examples:
     href_whitelist=pages['__settings__']['href_whitelist']
     delay=float(pages['__settings__']['delay'])
     crawler_excludes=pages['__settings__']['crawler_excludes']
-    preseed=pages['__settings__']['preseed']
+    tested_links=preseed=pages['__settings__']['preseed']
     print >> stderr, "Original crawl settings..."
     print >> stderr, "Target: %s" % start_url
     print >> stderr, "Domain Filter: %s" % domain_filter
     print >> stderr, "Crawler Excludes: %s" % crawler_excludes
   #end of crawl stage
+
+  #preseed results
+  print >> stderr, "\n"+"#"*70
+  if len(options.preseed):
+    try:
+      print >> stderr, "Preseeding results."
+      with open(options.preseed,'r') as f:
+        tested_links=preseed=json.load(f)
+    except Exception,e:
+      print >> stderr, "Not a valid preseed data file!  Must be in JSON format.  Aborting."
+      exit(1)
+  #end preseed results
 
   if len(options.triage_report) > 0:
     triage.add_preseeded_links(preseed.keys())
