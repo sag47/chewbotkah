@@ -32,6 +32,8 @@ crawler_excludes='.exe,.dmg'
 tested_links={}
 preseed={}
 profiling_results={}
+pages={}
+save_results={}
 
 def get_link_status(url):
   """
@@ -270,6 +272,8 @@ Examples:
   parser.add_option('--crawler-excludes',dest="crawler_excludes", help="Comma separated word list.  If word is in URL then the crawler won't attempt to crawl it.", metavar="LIST")
   parser.add_option('--preseed',dest="preseed", help="JSON formatted file with a default list of links and status to override for testing.", metavar="FILE")
   parser.add_option('--triage-report',dest="triage_report", help="Generate a report with all errors triaged in a markdown format.", metavar="FILE")
+  parser.add_option('--save-results',dest="save_results", help="Save all test results to a file which will be loaded later.", metavar="FILE")
+  parser.add_option('--load-results',dest="load_results", help="Load previously saved test results.  Any results loaded can be overwritten by additional options.", metavar="FILE")
   parser.set_defaults(domain_filter=domain_filter,
                       start_url=start_url,
                       href_whitelist=','.join(href_whitelist),
@@ -279,7 +283,9 @@ Examples:
                       load_crawl='',
                       crawler_excludes=crawler_excludes,
                       preseed="",
-                      triage_report="")
+                      triage_report="",
+                      save_results="",
+                      load_results="")
   (options, args) = parser.parse_args()
   if len(args) > 1:
     print >> stderr, "Warning, you've entered values outside of options."
@@ -334,6 +340,7 @@ Examples:
           json.dump(pages,f)
       except Exception,e:
         print >> stderr, "Error: %s" % e.message
+        STATUS=1
   else:
     print >> stderr, "Load crawl data: %s" % options.load_crawl
     try:
@@ -428,10 +435,24 @@ Examples:
     runtime="%(secs)ss" % {'secs':secs+microsecs}
   print >> stderr, "Elapsed time: %(runtime)s" % {'runtime':runtime}
   if len(options.triage_report) > 0:
-    print >> stderr, "Generating triage report."
-    triage.set_summary(total_tests=total,failed_tests=failures,runtime=runtime,request_delay=delay)
-    triage.triage_items()
-    with open(options.triage_report,'w') as f:
-      f.write(triage.report(tested_links=tested_links))
-
+    try:
+      print >> stderr, "Generating triage report.  Saved to %s." % options.triage_report
+      triage.set_summary(total_tests=total,failed_tests=failures,runtime=runtime,request_delay=delay)
+      triage.triage_items()
+      with open(options.triage_report,'w') as f:
+        f.write(triage.report(tested_links=tested_links))
+    except Exception,e:
+      print >> stderr, "Error: %s" % e.message
+      STATUS=1
+  if len(options.save_results) > 0 and not len(options.load_results) > 0:
+    try:
+      print >> stderr, "Saving results to %s." % options.save_results
+      save_results['profiling_results']=profiling_results
+      save_results['pages']=pages
+      save_results['preseed']=preseed
+      with open(options.save_results,'w') as f:
+        json.dump(save_results,f)
+    except Exception,e:
+      print >> stderr, "Error: %s" % e.message
+      STATUS=1
   exit(STATUS)
