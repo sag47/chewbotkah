@@ -31,6 +31,7 @@ skip_suites=[]
 crawler_excludes='.exe,.dmg'
 tested_links={}
 preseed={}
+profiling_results={}
 
 def get_link_status(url):
   """
@@ -193,6 +194,7 @@ def resource_status_codes_suite():
   global tested_links
   global triage
   global options
+  global profiling_results
   try:
     sel=selenium.selenium('127.0.0.1', 4444, '*firefox', start_url)
     sel.start('captureNetworkTraffic=true')
@@ -208,14 +210,16 @@ def resource_status_codes_suite():
     if not tested_links[re.sub(r'(.*)#.*$',r'\1',page)] == "200":
       #don't bother testing resources on a non-200 status page
       continue
-    sel.open(page)
-    #wait for javascript to potentially execute
-    if not delay == 0:
-      sleep(delay)
-    raw_xml = sel.captureNetworkTraffic('xml')
-    traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
+    if not page in profiling_results.keys():
+      sel.open(page)
+      #wait for javascript to potentially execute
+      if not delay == 0:
+        sleep(delay)
+      raw_xml = sel.captureNetworkTraffic('xml')
+      traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
+      profiling_results[page]=traffic_xml.encode('ascii', 'ignore')
     #network traffic details
-    nc = qa_nettools.NetworkCapture(traffic_xml.encode('ascii', 'ignore'))
+    nc = qa_nettools.NetworkCapture(profiling_results[page])
     http_details = nc.get_http_details()
     for status,method,resource,size,time in http_details:
       if method == 'GET':
