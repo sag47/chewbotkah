@@ -4,6 +4,7 @@
 #Ubuntu 13.10
 #Linux 3.11.0-12-generic x86_64
 #Python 2.7.5+
+import re
 from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from sys import stderr
@@ -34,6 +35,9 @@ class crawler():
     self.excludes=excludes
   def _consume(self,url):
     try:
+      url=re.sub(r'(.*)#.*$',r'\1',url)
+      if len(url) == 0:
+        return
       if url in self.pages:
         return
       #exclude patterns
@@ -55,7 +59,8 @@ class crawler():
             self.pages[url].append(tag.get_attribute('href'))
       if len(self.pages[url]) > 0:
         for link in self.pages[url]:
-          if (self.domain_filter in link) and not ('#' in link) and not (link in self.pages.keys()) and link[0:4] == 'http':
+          link=re.sub(r'(.*)#.*$',r'\1',link)
+          if (self.domain_filter in link) and not (link in self.pages.keys()) and link[0:4] == 'http':
             self._consume(link)
     except Exception,e:
       pass
