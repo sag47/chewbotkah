@@ -166,14 +166,16 @@ def link_status_codes_suite():
   for page in pages.keys():
     if page == '__settings__':
       continue
-    if not re.sub(r'(.*)#.*$',r'\1',page) in tested_links:
+    page=re.sub(r'(.*)#.*$',r'\1',page)
+    if not page in tested_links:
       if not delay == 0:
         sleep(delay)
-      tested_links[re.sub(r'(.*)#.*$',r'\1',page)]=get_link_status(page)
+      tested_links[page]=get_link_status(page)
     if not tested_links[page] == "200":
       #don't bother testing links on a non-200 status page
       continue
     for linked_page in pages[page]:
+      linked_page=re.sub(r'(.*)#.*$',r'\1',linked_page)
       if linked_page[0:4] == 'http':
         if linked_page in tested_links.keys():
           #if the URL has already been tested then skip testing and give the status
