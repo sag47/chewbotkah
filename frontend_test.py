@@ -324,12 +324,17 @@ Examples:
     try:
       with open(options.load_results,'r') as f:
         save_results=json.load(f)
-      pages=save_results['pages']
-      preseed=save_results['preseed']
-      profiling_results=save_results['profiling_results']
     except Exception,e:
       print >> stderr, "Not a valid load results file!  Must be in JSON format.  Aborting."
       exit(1)
+    if 'pages' in save_results.keys():
+      pages=save_results['pages']
+    if 'preseed' in save_results.keys():
+      preseed=save_results['preseed']
+    if 'profiling_results' in save_results.keys():
+      profiling_results=save_results['profiling_results']
+    if 'tested_links' in save_results.keys():
+      tested_links=save_results['tested_links']
 
 
   if len(options.triage_report) > 0:
@@ -463,7 +468,7 @@ Examples:
     except Exception,e:
       print >> stderr, "Error: %s" % e.message
       STATUS=1
-  if len(options.save_results) > 0 and not options.save_results == options.load_results:
+  if len(options.save_results) > 0:
     try:
       print >> stderr, "Saving results to %s." % options.save_results
       pages['__settings__']={}
@@ -474,6 +479,7 @@ Examples:
       pages['__settings__']['delay']=delay
       pages['__settings__']['skip_suites']=skip_suites
       pages['__settings__']['crawler_excludes']=crawler_excludes
+      save_results['tested_links']=tested_links
       save_results['profiling_results']=profiling_results
       save_results['pages']=pages
       save_results['preseed']=preseed
