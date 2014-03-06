@@ -33,7 +33,6 @@ tested_links={}
 preseed={}
 profiling_results={}
 pages={}
-pages['__settings__']={}
 save_results={}
 
 def get_link_status(url):
@@ -359,6 +358,7 @@ Examples:
     if len(options.save_crawl) > 0:
       print >> stderr, "Saving crawl data: %s" % options.save_crawl
       try:
+        pages['__settings__']={}
         pages['__settings__']['VERSION']=VERSION
         pages['__settings__']['start_url']=start_url
         pages['__settings__']['domain_filter']=domain_filter
@@ -466,6 +466,7 @@ Examples:
   if len(options.save_results) > 0 and not options.save_results == options.load_results:
     try:
       print >> stderr, "Saving results to %s." % options.save_results
+      pages['__settings__']={}
       pages['__settings__']['VERSION']=VERSION
       pages['__settings__']['start_url']=start_url
       pages['__settings__']['domain_filter']=domain_filter
