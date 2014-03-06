@@ -332,11 +332,11 @@ Examples:
     if 'pages' in save_results.keys():
       pages=save_results['pages']
     if 'preseed' in save_results.keys():
-      preseed=save_results['preseed']
+      preseed=save_results['preseed'].copy()
     if 'profiling_results' in save_results.keys():
-      profiling_results=save_results['profiling_results']
+      profiling_results=save_results['profiling_results'].copy()
     if 'tested_links' in save_results.keys():
-      tested_links=save_results['tested_links']
+      tested_links=save_results['tested_links'].copy()
 
 
   if len(options.triage_report) > 0:
@@ -349,7 +349,8 @@ Examples:
     try:
       print >> stderr, "Preseeding results."
       with open(options.preseed,'r') as f:
-        tested_links=preseed=json.load(f)
+        preseed=json.load(f)
+        tested_links=preseed.copy()
     except Exception,e:
       print >> stderr, "Not a valid preseed data file!  Must be in JSON format.  Aborting."
       exit(1)
