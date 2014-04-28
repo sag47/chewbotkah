@@ -10,9 +10,13 @@
 #libpango1.0-0 libpangox-1.0-0 libpangoxft-1.0-0
 set -e
 
+xvfb_pid="$(ps aux | grep -v grep | grep 'Xvfb :10' | awk '{print $2}')"
+firefox_pid="$(ps aux | grep -v grep | grep firefox | awk '{print $2}')"
+selenium_pid="$(ps aux | grep -v grep | grep 'java.*selenium-server-standalone' | awk '{print $2}')"
+
 if [ "$1" = "kill" ];then
   #killall -9 Xvfb java firefox openbox
-  killall -9 Xvfb java firefox
+  kill -9 ${xvfb_pid} ${firefox_pid} ${selenium_pid}
   exit
 fi
 
@@ -61,12 +65,12 @@ fi
 export DISPLAY=:10
 
 echo "Starting Xvfb ..."
-#if ! pgrep Xvfb &> /dev/null;then
+if [ -z "${xvfb_pid}" ];then
 #  Xvfb :10 +extension RANDR -screen 0 1366x768x24 -ac &> /dev/null &
   Xvfb :10 +extension RANDR -screen 0 1920x1080x24 -ac &> /dev/null &
-#else
-#  echo "Xvfb already running."
-#fi
+else
+  echo "Xvfb already running."
+fi
 #echo "Starting openbox window manager..."
 #if ! pgrep openbox &> /dev/null;then
 #  openbox &> /dev/null &
@@ -74,18 +78,19 @@ echo "Starting Xvfb ..."
 #  echo "openbox already running."
 #fi
 echo "Starting Firefox ..."
-#if ! pgrep firefox &> /dev/null;then
-firefox &>/dev/null &
-#else
-#  echo "Firefox already running."
-#fi
+
+if [ -z "${firefox_pid}" ];then
+  firefox &>/dev/null &
+else
+  echo "Firefox already running."
+fi
 echo "Starting Selenium ..."
 cd /usr/local/bin
-#if ! pgrep java &> /dev/null;then
-nohup java -jar ./selenium-server-standalone-2.39.0.jar &> /dev/null &
-#else 
-#  echo "java already running."
-#fi
+if [ -z "${selenium_pid}" ];then
+  nohup java -jar ./selenium-server-standalone-2.39.0.jar &> /dev/null &
+else 
+  echo "java already running."
+fi
 while ! nc localhost 4444 < /dev/null &>/dev/null;do
   sleep 1
 done
