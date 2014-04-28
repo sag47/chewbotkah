@@ -11,7 +11,7 @@
 set -e
 
 xvfb_pid="$(ps aux | grep -v grep | grep 'Xvfb :10' | awk '{print $2}')"
-firefox_pid="$(ps aux | grep -v grep | grep firefox | awk '{print $2}')"
+firefox_pid="$(ps aux | grep -v grep | grep '/firefox' | awk '{print $2}')"
 selenium_pid="$(ps aux | grep -v grep | grep 'java.*selenium-server-standalone' | awk '{print $2}')"
 
 if [ "$1" = "kill" ];then
