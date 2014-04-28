@@ -61,12 +61,12 @@ fi
 export DISPLAY=:10
 
 echo "Starting Xvfb ..."
-if ! pgrep Xvfb &> /dev/null;then
+#if ! pgrep Xvfb &> /dev/null;then
 #  Xvfb :10 +extension RANDR -screen 0 1366x768x24 -ac &> /dev/null &
   Xvfb :10 +extension RANDR -screen 0 1920x1080x24 -ac &> /dev/null &
-else
-  echo "Xvfb already running."
-fi
+#else
+#  echo "Xvfb already running."
+#fi
 #echo "Starting openbox window manager..."
 #if ! pgrep openbox &> /dev/null;then
 #  openbox &> /dev/null &
@@ -74,18 +74,18 @@ fi
 #  echo "openbox already running."
 #fi
 echo "Starting Firefox ..."
-if ! pgrep firefox &> /dev/null;then
-  firefox &>/dev/null &
-else
-  echo "Firefox already running."
-fi
+#if ! pgrep firefox &> /dev/null;then
+firefox &>/dev/null &
+#else
+#  echo "Firefox already running."
+#fi
 echo "Starting Selenium ..."
 cd /usr/local/bin
-if ! pgrep java &> /dev/null;then
-  nohup java -jar ./selenium-server-standalone-2.39.0.jar &> /dev/null &
-else 
-  echo "java already running."
-fi
+#if ! pgrep java &> /dev/null;then
+nohup java -jar ./selenium-server-standalone-2.39.0.jar &> /dev/null &
+#else 
+#  echo "java already running."
+#fi
 while ! nc localhost 4444 < /dev/null &>/dev/null;do
   sleep 1
 done
