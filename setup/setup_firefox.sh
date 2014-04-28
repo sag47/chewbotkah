@@ -73,7 +73,12 @@ fi
 #else
 #  echo "openbox already running."
 #fi
-firefox &>/dev/null &
+echo "Starting Firefox ..."
+if ! pgrep firefox &> /dev/null;then
+  firefox &>/dev/null &
+else
+  echo "Firefox already running."
+fi
 echo "Starting Selenium ..."
 cd /usr/local/bin
 if ! pgrep java &> /dev/null;then
@@ -81,4 +86,7 @@ if ! pgrep java &> /dev/null;then
 else 
   echo "java already running."
 fi
+while ! nc localhost 4444 < /dev/null &>/dev/null;do
+  sleep 1
+done
 echo "Done."
