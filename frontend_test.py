@@ -53,7 +53,7 @@ def get_link_status(url):
     https=True
   if ':' in url[2]:
     host=url[2].split(':')[0]
-    port=url[2].split(':')[1]
+    port=int(url[2].split(':')[1])
   else:
     host=url[2]
   try:
