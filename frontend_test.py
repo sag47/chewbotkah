@@ -108,8 +108,8 @@ class TestBadLinks(unittest.TestCase):
     self.status=status
     self.link=link
   def runTest(self):
-    self.assertEqual(self.status,
-                     "200",
+    self.assertIn(self.status,
+                     ("200","302"),
                      msg="\n\nOn page: %(page)s\nBad Link: %(link)s\nReturned HTTP Status: %(status)s" % {
                          'page': self.page,
                          'link': self.link,
