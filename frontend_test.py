@@ -186,7 +186,7 @@ def link_status_codes_suite():
           result=get_link_status(linked_page)
           suite.addTest(TestBadLinks(page,linked_page,result))
           tested_links[linked_page]=result
-        if len(options.triage_report) > 0 and not tested_links[linked_page] == "200":
+        if len(options.triage_report) > 0 and not ( tested_links[linked_page] == "200" or tested_links[linked_page] == "302" ):
           triage.add_link(page,linked_page,tested_links[linked_page])
   return suite
 
