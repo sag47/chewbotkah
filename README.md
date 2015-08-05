@@ -8,7 +8,7 @@ the things!
 
 # Setup for headless testing...
 
-Install Ubuntu 13.10 (Server or Desktop) in a VirtualBox Virtual Machine.
+Install Ubuntu 14.04 LTS (Server or Desktop) in a VirtualBox Virtual Machine.
 
 First run `setup.sh` as root.  Then run `setup.sh` as a normal user.
 
