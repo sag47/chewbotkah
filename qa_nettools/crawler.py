@@ -60,7 +60,7 @@ class crawler():
       if len(self.pages[url]) > 0:
         for link in self.pages[url]:
           link=re.sub(r'(.*)#.*$',r'\1',link)
-          if (self.domain_filter in link) and not (link in self.pages.keys()) and link[0:4] == 'http':
+          if (self.domain_filter in link.split('/')[2]) and not (link in self.pages.keys()) and link[0:4] == 'http':
             self._consume(link)
     except Exception,e:
       pass
