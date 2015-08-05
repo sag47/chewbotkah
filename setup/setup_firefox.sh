@@ -10,13 +10,15 @@
 #libpango1.0-0 libpangox-1.0-0 libpangoxft-1.0-0
 set -e
 
+remote_selenium="http://selenium-release.storage.googleapis.com/2.47/selenium-server-standalone-2.47.1.jar"
+local_selenium="/usr/local/bin/selenium-server-standalone-2.47.1.jar"
+
 xvfb_pid="$(ps aux | grep -v grep | grep 'Xvfb :10' | awk '{print $2}')"
-firefox_pid="$(ps aux | grep -v grep | grep '/firefox' | awk '{print $2}')"
 selenium_pid="$(ps aux | grep -v grep | grep 'java.*selenium-server-standalone' | awk '{print $2}')"
 
 if [ "$1" = "kill" ];then
-  #killall -9 Xvfb java firefox openbox
-  kill -9 ${xvfb_pid} ${firefox_pid} ${selenium_pid}
+  #killall -9 Xvfb java
+  kill -9 ${xvfb_pid} ${selenium_pid}
   exit
 fi
 
@@ -42,11 +44,9 @@ elif [ "$USER" = "root" ];then
 
 
   # Download and copy the ChromeDriver to /usr/local/bin
-  cd /tmp
-  if [ ! -f "selenium-server-standalone-2.47.1.jar" ];then
-    wget "http://selenium-release.storage.googleapis.com/2.47/selenium-server-standalone-2.47.1.jar"
+  if [ ! -f "${local_selenium}" ];then
+    wget -O "${local_selenium}" "${remote_selenium}"
   fi
-  mv -f selenium-server-standalone-2.47.1.jar /usr/local/bin
 
   # Don't reinstall everything
   touch /.installed
@@ -71,28 +71,14 @@ if [ -z "${xvfb_pid}" ];then
 else
   echo "Xvfb already running."
 fi
-#echo "Starting openbox window manager..."
-#if ! pgrep openbox &> /dev/null;then
-#  openbox &> /dev/null &
-#else
-#  echo "openbox already running."
-#fi
-echo "Starting Firefox ..."
 
-if [ -z "${firefox_pid}" ];then
-  rm -rf /tmp/ff_profile_tmp
-  mkdir -p /tmp/ff_profile_tmp
-  firefox -profile /tmp/ff_profile_tmp &>/dev/null &
-else
-  echo "Firefox already running."
-fi
 echo "Starting Selenium ..."
-cd /usr/local/bin
 if [ -z "${selenium_pid}" ];then
-  nohup java -jar ./selenium-server-standalone-2.47.1.jar &> /dev/null &
-else 
+  nohup java -jar "${local_selenium}" &> ./selenium.log &
+else
   echo "java already running."
 fi
+
 while ! nc localhost 4444 < /dev/null &>/dev/null;do
   sleep 1
 done
