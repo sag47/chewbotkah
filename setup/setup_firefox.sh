@@ -1,9 +1,9 @@
 #!/bin/bash
 #Sam Gleske
 #Mon Feb 17 10:13:43 EST 2014
-#Ubuntu 13.10
-#Linux 3.11.0-12-generic x86_64
-#GNU bash, version 4.2.45(1)-release (x86_64-pc-linux-gnu)
+#Ubuntu 14.04.2 LTS
+#Linux 3.13.0-58-generic x86_64
+#GNU bash, version 4.3.11(1)-release (x86_64-pc-linux-gnu)
 #Setup dev env
 #http://www.chrisle.me/2013/08/running-headless-selenium-with-chrome/
 #http://www.realpython.com/blog/python/headless-selenium-testing-with-python-and-phantomjs/
@@ -43,10 +43,10 @@ elif [ "$USER" = "root" ];then
 
   # Download and copy the ChromeDriver to /usr/local/bin
   cd /tmp
-  if [ ! -f "selenium-server-standalone-2.39.0.jar" ];then
-    wget "https://selenium.googlecode.com/files/selenium-server-standalone-2.39.0.jar"
+  if [ ! -f "selenium-server-standalone-2.47.1.jar" ];then
+    wget "http://selenium-release.storage.googleapis.com/2.47/selenium-server-standalone-2.47.1.jar"
   fi
-  mv -f selenium-server-standalone-2.39.0.jar /usr/local/bin
+  mv -f selenium-server-standalone-2.47.1.jar /usr/local/bin
 
   # Don't reinstall everything
   touch /.installed
@@ -80,14 +80,16 @@ fi
 echo "Starting Firefox ..."
 
 if [ -z "${firefox_pid}" ];then
-  firefox &>/dev/null &
+  rm -rf /tmp/ff_profile_tmp
+  mkdir -p /tmp/ff_profile_tmp
+  firefox -profile /tmp/ff_profile_tmp &>/dev/null &
 else
   echo "Firefox already running."
 fi
 echo "Starting Selenium ..."
 cd /usr/local/bin
 if [ -z "${selenium_pid}" ];then
-  nohup java -jar ./selenium-server-standalone-2.39.0.jar &> /dev/null &
+  nohup java -jar ./selenium-server-standalone-2.47.1.jar &> /dev/null &
 else 
   echo "java already running."
 fi
