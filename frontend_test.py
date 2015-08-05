@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #Created by Sam Gleske
 #Mon Feb 17 17:05:54 EST 2014
-#Ubuntu 13.10
-#Linux 3.11.0-12-generic x86_64
-#Python 2.7.5+
+#Ubuntu 14.04.2 LTS
+#Linux 3.13.0-58-generic x86_64
+#Python 2.7.6
 import httplib
 import json
 import qa_nettools
@@ -221,6 +221,7 @@ def resource_status_codes_suite():
       if not delay == 0:
         sleep(delay)
       raw_xml = sel.captureNetworkTraffic('xml')
+      sel.close()
       traffic_xml = raw_xml.replace('&', '&amp;').replace('=""GET""', '="GET"').replace('=""POST""', '="POST"') # workaround selenium bugs
       profiling_results[page]=traffic_xml.encode('ascii', 'ignore')
     #network traffic details
@@ -231,6 +232,7 @@ def resource_status_codes_suite():
         suite.addTest(TestBadResources(page,resource,str(status)))
         if len(options.triage_report) > 0 and not str(status) == "200":
           triage.add_resource(page,resource,str(status))
+  sel.stop()
   return suite
 
 def crawl():
@@ -247,7 +249,7 @@ def crawl():
     print >> stderr, "Crawler request delay: %f seconds" % delay
   crawler=qa_nettools.crawler(driver,domain_filter=domain_filter,delay=delay,excludes=crawler_excludes)
   pages=crawler.crawl(start_url)
-  driver.quit
+  driver.quit()
 
 if __name__ == '__main__':
   STATUS=0
